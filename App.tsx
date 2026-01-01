@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Report, AppView, Category } from './types';
 import { storage } from './services/storage';
 import { generatePDF } from './services/pdfService';
@@ -11,10 +11,13 @@ const App: React.FC = () => {
   const [view, setView] = useState<AppView>('LIST');
   const [reports, setReports] = useState<Report[]>([]);
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const [activeCategory, setActiveCategory] = useState<Category>('FIXO');
   const [activeTab, setActiveTab] = useState('MEUS MODELOS');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setReports(storage.getReports());
@@ -69,6 +72,48 @@ const App: React.FC = () => {
     generatePDF(report);
   };
 
+  // --- FUNÇÕES DE BACKUP ---
+  const handleExportBackup = () => {
+    const data = storage.getReports();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_reportmaster_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setIsMenuOpen(false);
+  };
+
+  const handleImportBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedData = JSON.parse(content);
+        if (Array.isArray(importedData)) {
+          if (window.confirm('Atenção: Isso substituirá todos os seus dados atuais pelos dados do backup. Deseja continuar?')) {
+            storage.saveReports(importedData);
+            setReports(storage.getReports());
+            alert('Backup restaurado com sucesso!');
+          }
+        } else {
+          alert('Arquivo de backup inválido.');
+        }
+      } catch (err) {
+        alert('Erro ao processar o arquivo de backup.');
+      }
+    };
+    reader.readAsText(file);
+    setIsMenuOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const getDurationMinutes = (start: string, end: string) => {
     if (!start || !end) return 0;
     const [h1, m1] = start.split(':').map(Number);
@@ -100,14 +145,74 @@ const App: React.FC = () => {
   }, [filteredReports]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-6">
+    <div className="min-h-screen bg-slate-50 pb-6 relative overflow-x-hidden">
+      
+      {/* --- SIDE MENU (DRAWER) --- */}
+      <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}></div>
+        <div className={`absolute top-0 left-0 h-full w-72 bg-white shadow-2xl transition-transform duration-300 flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">RM</div>
+              <span className="font-black text-slate-800 uppercase tracking-tight">Menu Principal</span>
+            </div>
+            <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+          </div>
+          
+          <div className="flex-1 p-4 space-y-2">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">Gerenciamento de Dados</p>
+            
+            <button 
+              onClick={handleExportBackup}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-slate-700 font-bold text-sm transition-colors group"
+            >
+              <span className="text-xl group-hover:scale-110 transition-transform">💾</span>
+              Fazer Backup (Exportar)
+            </button>
+            
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 text-slate-700 font-bold text-sm transition-colors group"
+            >
+              <span className="text-xl group-hover:scale-110 transition-transform">📥</span>
+              Restaurar Backup (Importar)
+            </button>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".json" 
+              onChange={handleImportBackup} 
+              className="hidden" 
+            />
+          </div>
+
+          <div className="p-6 border-t border-slate-100 bg-slate-50">
+             <div className="text-center">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Sobre o App</p>
+                <p className="text-xs font-black text-blue-600 uppercase tracking-tight">app criado por rafael</p>
+                <p className="text-[9px] text-slate-400 mt-2">Versão 1.5.0 Stable</p>
+             </div>
+          </div>
+        </div>
+      </div>
+
       <header className="bg-white p-4 sticky top-0 z-50 border-b border-slate-200 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">RM</div>
-            <div>
-              <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">ReportMaster</h1>
-              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Automação Serra Sul</p>
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="p-2 -ml-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">RM</div>
+              <div>
+                <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">ReportMaster</h1>
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Automação Serra Sul</p>
+              </div>
             </div>
           </div>
         </div>
