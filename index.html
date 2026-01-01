@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0b1120">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ReportMaster Offline</title>
@@ -18,16 +18,22 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            background-attachment: fixed;
+            background: #0b1120;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            color: #f8fafc;
         }
-        input:read-only {
-            background-color: #f1f5f9;
-            cursor: not-allowed;
+        /* Custom Scrollbar para Dark Mode */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        /* Otimização para modo App Instalado */
+        ::-webkit-scrollbar-track {
+            background: #0b1120;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 10px;
+        }
         @media (display-mode: standalone) {
             .sticky-header {
                 padding-top: env(safe-area-inset-top);
@@ -48,6 +54,7 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>

@@ -12,62 +12,66 @@ interface Props {
 }
 
 const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMarkExported, onQuickUse }) => {
-  // Função para verificar se é um UUID (criado manualmente)
   const isManualTemplate = (id: string) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   };
 
+  const handleCardClick = (report: Report) => {
+    if (report.isTemplate) {
+      onQuickUse(report);
+    } else {
+      onEdit(report);
+    }
+  };
+
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-2 max-w-full mx-auto">
       {reports.map((report) => (
         <div 
           key={report.id}
-          className={`rounded-3xl shadow-lg transition-all cursor-pointer group flex relative overflow-hidden active:scale-[0.99] border-2 ${
-            report.isExported 
-              ? 'bg-emerald-50 border-emerald-300' 
-              : 'bg-white border-slate-200'
-          }`}
-          onClick={() => onEdit(report)}
+          className={`rounded-xl shadow-md transition-all cursor-pointer flex overflow-hidden border border-slate-800 group ${
+            report.isExported ? 'bg-[#1e293b]/40' : 'bg-[#161c2d]'
+          } hover:border-blue-500/50 active:scale-[0.98]`}
+          onClick={() => handleCardClick(report)}
         >
-          {/* Barra lateral indicadora */}
-          <div className={`w-1.5 self-stretch ${report.isOmFinished ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
+          {/* Indicador lateral extra fino */}
+          <div className={`w-1 shrink-0 ${report.isTemplate ? 'bg-blue-600' : report.isOmFinished ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
 
-          <div className="flex-1 p-5">
-            <div className="flex justify-between items-start gap-3 mb-3">
-              <div className="space-y-1.5 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider border border-slate-200">
-                    {report.isTemplate ? 'Modelo' : `OM: ${report.omNumber || '---'}`}
-                  </span>
-                  {!report.isTemplate && (
-                     <>
-                        <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wide border flex items-center gap-1 ${report.isOmFinished ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${report.isOmFinished ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                            {report.isOmFinished ? 'Finalizada' : 'Em Aberto'}
-                        </span>
-                        {report.isExported && (
-                            <span className="text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wide border bg-green-600 text-white border-green-600 flex items-center gap-1">
-                                ✓✓ Enviado
-                            </span>
-                        )}
-                     </>
-                  )}
+          <div className="flex-1 p-2.5 flex flex-col justify-center min-w-0">
+            <div className="flex justify-between items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                   <span className="text-[7px] font-black text-slate-500 uppercase tracking-tighter bg-slate-800/50 px-1 rounded">
+                     {report.omNumber || 'SEM NÚMERO'}
+                   </span>
+                   {report.isExported && (
+                      <span className="text-[7px] font-black text-emerald-500 uppercase">✓ Enviado</span>
+                   )}
                 </div>
-                <h3 className="font-bold text-base text-slate-800 leading-snug uppercase line-clamp-2 pr-2">
+                {/* Título com fonte reduzida para container ficar mais "fino" */}
+                <h3 className="font-bold text-[11px] text-slate-100 uppercase leading-tight truncate">
                   {report.omDescription}
                 </h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                   <span className="text-[8px] text-slate-500 flex items-center gap-1">
+                      📅 {report.date ? report.date.split('-').reverse().join('/') : '--/--/----'}
+                   </span>
+                   <span className="text-[8px] text-slate-500 flex items-center gap-1 uppercase tracking-tighter">
+                      🛡️ {report.activityType}
+                   </span>
+                </div>
               </div>
-              
-              <div className="flex gap-2 shrink-0">
-                {/* Só permite excluir se NÃO for template OU se for um template manual (UUID) */}
+
+              <div className="flex items-center gap-1 shrink-0 ml-2">
+                {/* Excluir disponível se for relatório ou modelo manual */}
                 {(!report.isTemplate || isManualTemplate(report.id)) && (
                   <button 
-                    onClick={(e) => { e.stopPropagation(); onDelete(report.id); }}
-                    className="w-10 h-10 flex items-center justify-center bg-white hover:bg-red-50 hover:text-red-500 rounded-xl text-red-400 transition-all border-2 border-slate-200 shadow-sm active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); onDelete(report.id); }} 
+                    className="p-1.5 hover:bg-red-900/30 rounded-md text-slate-500 hover:text-red-400 transition-colors"
                     title="Excluir"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -75,31 +79,15 @@ const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMar
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100">
-              <div className="grid grid-cols-3 gap-2 flex-1">
-                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Data</span>
-                  <span className="font-bold text-xs text-slate-700">{report.date ? report.date.split('-').reverse().join('/') : '--/--'}</span>
-                </div>
-                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Início</span>
-                  <span className="font-bold text-xs text-emerald-600">{report.startTime || '--:--'}</span>
-                </div>
-                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
-                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Fim</span>
-                  <span className="font-bold text-xs text-red-500">{report.endTime || '--:--'}</span>
-                </div>
+            {/* Infos de tempo reduzidas para relatórios ativos */}
+            {!report.isTemplate && (
+              <div className="flex items-center gap-3 pt-1 border-t border-slate-800/30 mt-1">
+                <span className="text-[8px] font-bold text-slate-500">⏰ {report.startTime || '--:--'} - {report.endTime || '--:--'}</span>
+                <span className={`text-[7px] font-black px-1 py-0.5 rounded uppercase ${report.isOmFinished ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                  {report.isOmFinished ? 'Finalizada' : 'Aberta'}
+                </span>
               </div>
-
-              {report.isTemplate && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onQuickUse(report); }}
-                  className="bg-blue-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-md active:scale-95 shrink-0"
-                >
-                  <span>🛠️</span> Utilizar Modelo
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
       ))}

@@ -33,10 +33,8 @@ const App: React.FC = () => {
     setView('EDIT');
   };
 
-  // Função para utilizar o modelo instantaneamente (sem abrir o formulário)
   const handleQuickUse = (template: Report) => {
     const getTodayStr = () => new Date().toISOString().split('T')[0];
-    
     const newFilledReport: Report = { 
       ...template, 
       id: crypto.randomUUID(), 
@@ -46,12 +44,9 @@ const App: React.FC = () => {
       category: activeCategory,
       isExported: false
     };
-
     storage.addReport(newFilledReport);
     setReports(storage.getReports());
     setActiveTab('RELATÓRIOS');
-    
-    // Feedback tátil/visual se necessário (alerta leve ou scroll)
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -111,7 +106,6 @@ const App: React.FC = () => {
   const handleImportBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -166,149 +160,98 @@ const App: React.FC = () => {
   }, [filteredReports]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-950 pb-6 relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0b1120] pb-10 relative overflow-x-hidden text-slate-200">
       
-      {/* --- SIDE MENU (DRAWER) --- */}
+      {/* SIDE MENU */}
       <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-slate-950/80" onClick={() => setIsMenuOpen(false)}></div>
-        <div className={`absolute top-0 left-0 h-full w-72 bg-white shadow-2xl transition-transform duration-300 flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}></div>
+        <div className={`absolute top-0 left-0 h-full w-72 bg-[#161c2d] border-r border-slate-800 shadow-2xl transition-transform duration-300 flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">RM</div>
-              <span className="font-black text-slate-800 uppercase tracking-tight">Menu Principal</span>
+              <span className="font-black text-slate-100 uppercase tracking-tight">Menu</span>
             </div>
-            <button onClick={() => setIsMenuOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+            <button onClick={() => setIsMenuOpen(false)} className="text-slate-500 hover:text-white">✕</button>
           </div>
-          
           <div className="flex-1 p-4 space-y-2">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 mb-2">Gerenciamento de Dados</p>
-            
-            <button 
-              onClick={handleExportBackup}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-blue-50 text-slate-700 font-bold text-sm transition-colors group"
-            >
-              <span className="text-xl group-hover:scale-110 transition-transform">💾</span>
-              Fazer Backup (Exportar)
-            </button>
-            
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50 text-slate-700 font-bold text-sm transition-colors group"
-            >
-              <span className="text-xl group-hover:scale-110 transition-transform">📥</span>
-              Restaurar Backup (Importar)
-            </button>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept=".json" 
-              onChange={handleImportBackup} 
-              className="hidden" 
-            />
-          </div>
-
-          <div className="p-6 border-t border-slate-100 bg-slate-50">
-             <div className="text-center">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Sobre o App</p>
-                <p className="text-xs font-black text-blue-600 uppercase tracking-tight">app criado por rafael</p>
-                <p className="text-[9px] text-slate-400 mt-2">Versão 1.5.0 Stable</p>
-             </div>
+             <button onClick={handleExportBackup} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-slate-300 font-bold text-sm transition-colors"><span>💾</span> Backup (Exportar)</button>
+             <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-slate-300 font-bold text-sm transition-colors"><span>📥</span> Restaurar (Importar)</button>
+             <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
           </div>
         </div>
       </div>
 
-      <header className="bg-white p-4 sticky top-0 z-50 border-b border-slate-200 shadow-xl">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMenuOpen(true)}
-              className="p-2 -ml-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-600"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+      {/* HEADER COMPACTO */}
+      <header className="bg-[#0b1120] p-4 sticky top-0 z-50 border-b border-slate-800">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg">RM</div>
-              <div>
-                <h1 className="text-lg font-black text-slate-900 tracking-tight leading-none">ReportMaster</h1>
-                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">Automação Serra Sul</p>
-              </div>
+            <div>
+                <h1 className="text-lg font-black text-white tracking-tight leading-none">ReportMaster</h1>
+                <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest mt-0.5">S11D - SERRA SUL</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className={`max-w-4xl mx-auto space-y-4 ${view === 'LIST' ? 'p-4' : 'p-0'}`}>
+      <main className={`max-w-xl mx-auto space-y-5 ${view === 'LIST' ? 'p-4' : 'p-0'}`}>
         {view === 'LIST' ? (
           <>
             <div className="relative">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-               </div>
                <input 
                  type="text" 
-                 placeholder="Pesquisar por OM ou Descrição..."
+                 placeholder="Buscar modelo..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-300 bg-white shadow-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-600"
+                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#161c2d] border border-slate-800 text-sm font-medium text-slate-200 outline-none focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-500"
                />
+               <svg className="w-5 h-5 absolute left-3 top-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
 
-            <div className="flex bg-slate-900/50 p-1.5 rounded-2xl gap-1.5 border border-white/10">
-               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>🔧 Fixos</button>
-               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>🚛 Móveis</button>
+            {/* CATEGORY SELECTOR */}
+            <div className="flex bg-[#161c2d] p-1 rounded-xl border border-slate-800">
+               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}><span>🔧</span> FIXOS</button>
+               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}><span>🚛</span> MÓVEIS</button>
             </div>
 
-            <div className="flex border-b border-white/10">
-               {['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA'].map(tab => (
-                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === tab ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>{tab.replace('MEUS ', '')}</button>
-               ))}
+            {/* TABS COMPACTAS */}
+            <div className="flex justify-around border-b border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500">
+               <button onClick={() => setActiveTab('MEUS MODELOS')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'MEUS MODELOS' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Meus Modelos</button>
+               <button onClick={() => setActiveTab('RELATÓRIOS')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'RELATÓRIOS' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Relatórios</button>
+               <button onClick={() => setActiveTab('BOA JORNADA')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'BOA JORNADA' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Início de Turno</button>
             </div>
 
             {activeTab === 'BOA JORNADA' ? <ShiftStart /> : (
-              <>
+              <div className="space-y-3">
+                {activeTab === 'MEUS MODELOS' && (
+                  <button onClick={handleCreateNew} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-500 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shadow-lg active:scale-95"><span>+</span> Novo Modelo {activeCategory}</button>
+                )}
+                
                 {activeTab === 'RELATÓRIOS' && filteredReports.length > 0 && (
-                  <div className="bg-white p-4 rounded-2xl border-2 border-blue-500/30 shadow-2xl flex items-center justify-between">
+                  <div className="bg-[#161c2d] p-4 rounded-xl border border-slate-800 flex items-center justify-between shadow-lg">
                     <div>
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tempo Total de Execução</h3>
-                      <div className="flex items-baseline gap-1 mt-0.5">
-                        <span className="text-2xl font-black text-blue-600">{totalExecutionTime.hours}h</span>
-                        <span className="text-sm font-black text-blue-400">{totalExecutionTime.minutes.toString().padStart(2, '0')}m</span>
-                      </div>
+                      <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tempo Total Turno</h3>
+                      <p className="text-xl font-black text-blue-500">{totalExecutionTime.hours}h {totalExecutionTime.minutes}m</p>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-xl text-xl">⏱️</div>
+                    <span className="text-2xl opacity-50">⏱️</span>
                   </div>
                 )}
-                {activeTab === 'MEUS MODELOS' && (
-                  <button onClick={handleCreateNew} className="w-full bg-slate-800 border-2 border-dashed border-blue-500/50 text-blue-400 font-black py-4 rounded-2xl hover:bg-slate-700 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest group shadow-xl"><span className="text-xl group-hover:scale-125 transition-transform">➕</span> Criar Novo Modelo {activeCategory}</button>
-                )}
-                <div className="space-y-3">
-                  {filteredReports.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-900/50 rounded-3xl border-2 border-dashed border-white/10">
-                      <span className="text-5xl block mb-4 grayscale opacity-30">📂</span>
-                      <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">Nenhum item encontrado.</p>
-                    </div>
-                  ) : (
-                    <ReportList 
-                      reports={filteredReports} 
-                      onEdit={handleEdit} 
-                      onDelete={handleDelete} 
-                      onPrint={handlePrint} 
-                      onMarkExported={handleMarkAsExported}
-                      onQuickUse={handleQuickUse} 
-                    />
-                  )}
-                </div>
-              </>
+
+                <ReportList 
+                  reports={filteredReports} 
+                  onEdit={handleEdit} 
+                  onDelete={handleDelete} 
+                  onPrint={handlePrint} 
+                  onMarkExported={handleMarkAsExported}
+                  onQuickUse={handleQuickUse} 
+                />
+              </div>
             )}
           </>
         ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <ReportForm initialData={currentReport} onSave={handleSave} onCancel={() => setView('LIST')} isEdit={view === 'EDIT'} onMarkExported={handleMarkAsExported} />
-          </div>
+          <ReportForm initialData={currentReport} onSave={handleSave} onCancel={() => setView('LIST')} isEdit={view === 'EDIT'} onMarkExported={handleMarkAsExported} />
         )}
       </main>
     </div>
