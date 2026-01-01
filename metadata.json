@@ -1,0 +1,7 @@
+{
+  "name": "ReportMaster Offline",
+  "description": "Um aplicativo robusto para elaboração de relatórios de atividades industriais com suporte offline, fotos e geração de PDF.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
