@@ -12,7 +12,6 @@ const App: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
   
-  // UI States
   const [activeCategory, setActiveCategory] = useState<Category>('FIXO');
   const [activeTab, setActiveTab] = useState('MEUS MODELOS');
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,22 +32,12 @@ const App: React.FC = () => {
 
   const handleSave = (formData: Report) => {
     if (view === 'CREATE') {
-      const templateToSave = { 
-        ...formData, 
-        isTemplate: true,
-        category: activeCategory 
-      };
+      const templateToSave = { ...formData, isTemplate: true, category: activeCategory };
       storage.addReport(templateToSave);
       setActiveTab('MEUS MODELOS');
     } else if (view === 'EDIT') {
       if (currentReport?.isTemplate) {
-        const newFilledReport = { 
-          ...formData, 
-          id: crypto.randomUUID(),
-          createdAt: Date.now(),
-          isTemplate: false,
-          category: activeCategory
-        };
+        const newFilledReport = { ...formData, id: crypto.randomUUID(), createdAt: Date.now(), isTemplate: false, category: activeCategory };
         storage.addReport(newFilledReport);
         setActiveTab('RELATÓRIOS');
       } else {
@@ -56,7 +45,6 @@ const App: React.FC = () => {
         setActiveTab('RELATÓRIOS');
       }
     }
-    
     setReports(storage.getReports());
     setView('LIST');
   };
@@ -93,38 +81,22 @@ const App: React.FC = () => {
   const filteredReports = useMemo(() => {
     let result = reports.filter(r => {
       const matchesCategory = r.category === activeCategory || (!r.category && activeCategory === 'FIXO');
-      
-      let matchesTab = true;
-      if (activeTab === 'MEUS MODELOS') {
-        matchesTab = r.isTemplate === true;
-      } else if (activeTab === 'RELATÓRIOS') {
-        matchesTab = r.isTemplate === false;
-      }
-      
+      let matchesTab = activeTab === 'MEUS MODELOS' ? r.isTemplate : activeTab === 'RELATÓRIOS' ? !r.isTemplate : true;
       const matchesSearch = r.omDescription.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            r.omNumber.toLowerCase().includes(searchQuery.toLowerCase());
-      
       return matchesCategory && matchesTab && matchesSearch;
     });
-
     if (activeTab === 'RELATÓRIOS') {
-      result.sort((a, b) => {
-        const timeA = a.startTime || '00:00';
-        const timeB = b.startTime || '00:00';
-        return timeA.localeCompare(timeB);
-      });
+      result.sort((a, b) => (a.startTime || '00:00').localeCompare(b.startTime || '00:00'));
     } else {
       result.sort((a, b) => b.createdAt - a.createdAt);
     }
-
     return result;
   }, [reports, activeCategory, activeTab, searchQuery]);
 
   const totalExecutionTime = useMemo(() => {
     const totalMinutes = filteredReports.reduce((acc, r) => acc + getDurationMinutes(r.startTime, r.endTime), 0);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return { hours, minutes, totalMinutes };
+    return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 };
   }, [filteredReports]);
 
   return (
@@ -145,8 +117,8 @@ const App: React.FC = () => {
         {view === 'LIST' ? (
           <>
             <div className="relative">
-               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                </div>
@@ -155,53 +127,22 @@ const App: React.FC = () => {
                  placeholder="Pesquisar por OM ou Descrição..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-500 !text-slate-500"
+                 className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-500"
                />
             </div>
 
             <div className="flex bg-slate-200/50 p-1.5 rounded-2xl gap-1.5">
-               <button 
-                 onClick={() => setActiveCategory('FIXO')}
-                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${
-                   activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'
-                 }`}
-               >
-                 🔧 Fixos
-               </button>
-               <button 
-                 onClick={() => setActiveCategory('MÓVEL')}
-                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${
-                   activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'
-                 }`}
-               >
-                 🚛 Móveis
-               </button>
+               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'}`}>🔧 Fixos</button>
+               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'}`}>🚛 Móveis</button>
             </div>
 
             <div className="flex border-b border-slate-200">
-               <button 
-                onClick={() => setActiveTab('MEUS MODELOS')}
-                className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === 'MEUS MODELOS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
-               >
-                 📋 Modelos
-               </button>
-               <button 
-                onClick={() => setActiveTab('RELATÓRIOS')}
-                className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === 'RELATÓRIOS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
-               >
-                 ✅ Relatórios
-               </button>
-               <button 
-                onClick={() => setActiveTab('BOA JORNADA')}
-                className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === 'BOA JORNADA' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}
-               >
-                 📣 Boa Jornada
-               </button>
+               {['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA'].map(tab => (
+                 <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>{tab.replace('MEUS ', '')}</button>
+               ))}
             </div>
 
-            {activeTab === 'BOA JORNADA' ? (
-              <ShiftStart />
-            ) : (
+            {activeTab === 'BOA JORNADA' ? <ShiftStart /> : (
               <>
                 {activeTab === 'RELATÓRIOS' && filteredReports.length > 0 && (
                   <div className="bg-white p-4 rounded-2xl border-2 border-blue-100 shadow-sm flex items-center justify-between">
@@ -212,21 +153,12 @@ const App: React.FC = () => {
                         <span className="text-sm font-black text-blue-400">{totalExecutionTime.minutes.toString().padStart(2, '0')}m</span>
                       </div>
                     </div>
-                    <div className="p-3 bg-blue-50 rounded-xl">
-                      <span className="text-xl">⏱️</span>
-                    </div>
+                    <div className="p-3 bg-blue-50 rounded-xl text-xl">⏱️</div>
                   </div>
                 )}
-
                 {activeTab === 'MEUS MODELOS' && (
-                  <button 
-                    onClick={handleCreateNew}
-                    className="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-black py-4 rounded-2xl hover:bg-blue-50 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest group"
-                  >
-                    <span className="text-xl group-hover:scale-125 transition-transform">➕</span> Criar Novo Modelo {activeCategory}
-                  </button>
+                  <button onClick={handleCreateNew} className="w-full bg-white border-2 border-dashed border-blue-400 text-blue-600 font-black py-4 rounded-2xl hover:bg-blue-50 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-widest group"><span className="text-xl group-hover:scale-125 transition-transform">➕</span> Criar Novo Modelo {activeCategory}</button>
                 )}
-                
                 <div className="space-y-3">
                   {filteredReports.length === 0 ? (
                     <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-200">
@@ -234,13 +166,7 @@ const App: React.FC = () => {
                       <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Nenhum item encontrado.</p>
                     </div>
                   ) : (
-                    <ReportList 
-                      reports={filteredReports} 
-                      onEdit={handleEdit} 
-                      onDelete={handleDelete}
-                      onPrint={handlePrint}
-                      onMarkExported={handleMarkAsExported}
-                    />
+                    <ReportList reports={filteredReports} onEdit={handleEdit} onDelete={handleDelete} onPrint={handlePrint} onMarkExported={handleMarkAsExported} />
                   )}
                 </div>
               </>
@@ -248,13 +174,7 @@ const App: React.FC = () => {
           </>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <ReportForm 
-              initialData={currentReport} 
-              onSave={handleSave} 
-              onCancel={() => setView('LIST')}
-              isEdit={view === 'EDIT'}
-              onMarkExported={handleMarkAsExported}
-            />
+            <ReportForm initialData={currentReport} onSave={handleSave} onCancel={() => setView('LIST')} isEdit={view === 'EDIT'} onMarkExported={handleMarkAsExported} />
           </div>
         )}
       </main>

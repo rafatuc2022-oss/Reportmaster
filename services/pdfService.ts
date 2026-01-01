@@ -18,22 +18,18 @@ export const generatePDF = async (report: Report) => {
   const colorGrayBorder = [203, 213, 225]; // #cbd5e1
   const colorTextLabel = [100, 116, 139]; // #64748b
   const colorTextValue = [30, 41, 59]; // #1e293b
+  const colorSuccess = [22, 163, 74]; // #16a34a (Verde Forte)
+  const colorDanger = [220, 38, 38]; // #dc2626 (Vermelho Forte)
 
   // --- FUNÇÕES AUXILIARES ---
 
-  // Desenha uma célula de tabela (Label + Valor)
   const drawCell = (label: string, value: string, x: number, yPos: number, w: number, h: number, isMultiLine = false) => {
-    // Borda
     doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
     doc.rect(x, yPos, w, h);
-
-    // Label (pequeno no topo esquerdo)
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
     doc.text(label.toUpperCase(), x + 2, yPos + 4);
-
-    // Valor
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
@@ -42,7 +38,6 @@ export const generatePDF = async (report: Report) => {
        const splitText = doc.splitTextToSize(value || '-', w - 4);
        doc.text(splitText, x + 2, yPos + 9);
     } else {
-       // Trunca texto se for muito longo para uma linha simples
        let text = value || '-';
        if (doc.getTextWidth(text) > w - 4) {
          text = text.substring(0, Math.floor(text.length * (w / doc.getTextWidth(text)))) + '...';
@@ -51,7 +46,6 @@ export const generatePDF = async (report: Report) => {
     }
   };
 
-  // Cabeçalho de Seção
   const drawSectionHeader = (title: string, yPos: number) => {
     doc.setFillColor(colorBlue[0], colorBlue[1], colorBlue[2]);
     doc.rect(margin, yPos, contentWidth, 6, 'F');
@@ -62,25 +56,37 @@ export const generatePDF = async (report: Report) => {
     return 6;
   };
 
-  // --- CONSTRUÇÃO DO DOCUMENTO ---
+  // Desenha Ícone Dinâmico (Check ou Cross)
+  const drawStatusIcon = (x: number, yPos: number, isSuccess: boolean) => {
+    if (isSuccess) {
+      doc.setDrawColor(colorSuccess[0], colorSuccess[1], colorSuccess[2]);
+      doc.setLineWidth(0.6);
+      doc.line(x, yPos + 1.5, x + 1.2, yPos + 2.7);
+      doc.line(x + 1.2, yPos + 2.7, x + 3.5, yPos);
+    } else {
+      doc.setDrawColor(colorDanger[0], colorDanger[1], colorDanger[2]);
+      doc.setLineWidth(0.6);
+      doc.line(x, yPos, x + 3, yPos + 3);
+      doc.line(x + 3, yPos, x, yPos + 3);
+    }
+    doc.setLineWidth(0.2); // reset
+  };
 
-  // 1. CABEÇALHO DO RELATÓRIO
-  doc.addImage("https://cdn-icons-png.flaticon.com/512/906/906343.png", "PNG", margin, y, 12, 12); // Placeholder Logo (Checklist icon)
-  
+  // --- CONSTRUÇÃO ---
+
+  // 1. CABEÇALHO
+  doc.addImage("https://cdn-icons-png.flaticon.com/512/906/906343.png", "PNG", margin, y, 12, 12);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(colorBlue[0], colorBlue[1], colorBlue[2]);
   doc.text("RELATÓRIO TÉCNICO DE ATIVIDADE", margin + 16, y + 5);
-
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
   doc.text("AUTOMAÇÃO MINA SERRA SUL | MANUTENÇÃO", margin + 16, y + 10);
 
-  // Box N OM e Data (Direita)
   doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
   doc.roundedRect(pageWidth - margin - 40, y, 40, 12, 1, 1);
-  
   doc.setFontSize(7);
   doc.text("N° OM", pageWidth - margin - 38, y + 4);
   doc.setFontSize(10);
@@ -90,206 +96,145 @@ export const generatePDF = async (report: Report) => {
 
   y += 18;
 
-  // 2. DADOS DO EQUIPAMENTO E LOCAL (IDENTIFICAÇÃO)
+  // 2. IDENTIFICAÇÃO
   y += drawSectionHeader("Identificação", y);
-  
-  // Linha 1
   drawCell("Equipamento", report.equipment, margin, y, contentWidth * 0.6, 12);
   drawCell("Localização", report.location, margin + (contentWidth * 0.6), y, contentWidth * 0.4, 12);
   y += 12;
-  
-  // Linha 2
   drawCell("Centro de Trabalho", report.workCenter, margin, y, contentWidth * 0.33, 12);
   drawCell("Equipe / Turno", report.teamShift, margin + (contentWidth * 0.33), y, contentWidth * 0.33, 12);
   drawCell("Tipo Atividade", report.activityType.toUpperCase(), margin + (contentWidth * 0.66), y, contentWidth * 0.34, 12);
   y += 12;
-
-  // Linha 3 (NOVO: Técnicos integrados na Identificação conforme pedido)
   drawCell("Responsáveis Técnicos", report.technicians || "Não informado", margin, y, contentWidth, 12);
   y += 12;
 
   // 3. CRONOGRAMA
-  y += 4; // Spacer
+  y += 4;
   y += drawSectionHeader("Cronograma de Execução", y);
-
   drawCell("Data Execução", report.date.split('-').reverse().join('/'), margin, y, contentWidth * 0.25, 12);
   drawCell("Início", report.startTime, margin + (contentWidth * 0.25), y, contentWidth * 0.25, 12);
   drawCell("Fim", report.endTime, margin + (contentWidth * 0.5), y, contentWidth * 0.25, 12);
   
-  // Calculo duração
   let duration = "-";
   if (report.startTime && report.endTime) {
      const [h1, m1] = report.startTime.split(':').map(Number);
      const [h2, m2] = report.endTime.split(':').map(Number);
      let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
      if (diff < 0) diff += 24 * 60;
-     const dh = Math.floor(diff / 60);
-     const dm = diff % 60;
-     duration = `${dh}h ${dm}m`;
+     duration = `${Math.floor(diff / 60)}h ${diff % 60}m`;
   }
   drawCell("Duração Estimada", duration, margin + (contentWidth * 0.75), y, contentWidth * 0.25, 12);
   y += 12;
 
-  // 4. EXECUÇÃO TÉCNICA
+  // 4. DETALHAMENTO COM ÍCONES DINÂMICOS
   y += 4;
   y += drawSectionHeader("Detalhamento da Execução", y);
+  drawCell("Descrição da Ordem de Manutenção", report.omDescription, margin, y, contentWidth, 14, true);
+  y += 14;
 
-  // Descrição da OM
-  const descHeight = 16;
-  drawCell("Descrição da Ordem de Manutenção", report.omDescription, margin, y, contentWidth, descHeight, true);
-  y += descHeight;
-
-  // Atividades Executadas (Campo Grande)
-  // Calcula altura necessária
-  doc.setFontSize(9);
-  const activitiesLines = doc.splitTextToSize(report.activityExecuted || '-', contentWidth - 6);
-  // Altura mínima de 40, máxima dinâmica até o fim da página com margem
-  let activitiesBoxHeight = Math.max(50, (activitiesLines.length * 4) + 15);
+  const rawActivities = report.activityExecuted || '-';
+  const lines = rawActivities.split('\n').filter(l => l.trim() !== '');
+  const activitiesBoxHeight = Math.max(50, (lines.length * 6) + 15);
   
-  // Verifica se cabe na página
-  if (y + activitiesBoxHeight > pageHeight - 60) {
-      activitiesBoxHeight = pageHeight - y - 60;
-  }
-
-  // Caixa Atividades
   doc.setFillColor(colorGrayBg[0], colorGrayBg[1], colorGrayBg[2]);
-  doc.rect(margin, y, contentWidth, activitiesBoxHeight, 'F'); // Fundo cinza claro
-  drawCell("Atividades Executadas / Procedimentos Realizados", "", margin, y, contentWidth, activitiesBoxHeight); // Borda e Label
+  doc.rect(margin, y, contentWidth, activitiesBoxHeight, 'F');
+  drawCell("Atividades Executadas / Procedimentos Realizados", "", margin, y, contentWidth, activitiesBoxHeight);
   
-  // Texto das atividades
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
-  doc.text(activitiesLines, margin + 3, y + 10);
+  
+  lines.forEach((line, index) => {
+    const lineY = y + 12 + (index * 6);
+    if (lineY < pageHeight - 40) {
+      // Lógica de ícone dinâmico: se a linha contiver um 'x' no início ou emoji de erro, mostra ❌
+      const cleanLine = line.trim().replace(/^[✅❌]\s*/, '');
+      const isError = line.toLowerCase().includes('❌') || line.toLowerCase().startsWith('x ');
+      
+      drawStatusIcon(margin + 4, lineY - 2.5, !isError);
+      doc.text(cleanLine, margin + 10, lineY);
+    }
+  });
   
   y += activitiesBoxHeight;
 
-  // 5. STATUS E CONTROLE
+  // 5. STATUS COM CORES DE ALTA VISIBILIDADE
   y += 4;
   y += drawSectionHeader("Status & Controle", y);
-
-  // Cria mini cards para status
-  const drawStatusCard = (label: string, status: boolean, x: number, w: number, explanation?: string) => {
-    const h = explanation ? 20 : 12;
+  const drawStatus = (label: string, status: boolean, x: number, w: number, obs?: string) => {
+    const h = obs ? 20 : 12;
     doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
     doc.rect(x, y, w, h);
     
-    // Checkbox simulado
-    doc.setFillColor(status ? colorBlue[0] : 255, status ? colorBlue[1] : 255, status ? colorBlue[2] : 255);
-    doc.setDrawColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
-    doc.circle(x + 8, y + 6, 2.5, 'FD');
+    // Circulo lateral
+    doc.setFillColor(status ? colorSuccess[0] : colorDanger[0]);
+    doc.circle(x + 5, y + 6, 1.8, 'F');
     
-    doc.setFontSize(8);
-    doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
+    doc.setFontSize(8); 
     doc.setFont('helvetica', 'bold');
-    doc.text(label, x + 16, y + 7);
+    doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
+    doc.text(label, x + 10, y + 7);
 
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    // Valor SIM/NÃO com cor explícita
     const statusText = status ? "SIM" : "NÃO";
-    doc.text(statusText, x + w - 15, y + 7);
+    if (status) {
+      doc.setTextColor(colorSuccess[0], colorSuccess[1], colorSuccess[2]);
+    } else {
+      doc.setTextColor(colorDanger[0], colorDanger[1], colorDanger[2]);
+    }
+    doc.text(statusText, x + w - 12, y + 7, { align: 'right' });
 
-    if (explanation) {
-        doc.setFontSize(7);
-        doc.setTextColor(220, 38, 38); // Red
-        doc.text(`Obs: ${explanation.substring(0, 45)}`, x + 4, y + 16);
+    if (obs) { 
+      doc.setFontSize(7); 
+      doc.setFont('helvetica', 'normal'); 
+      doc.setTextColor(colorDanger[0], colorDanger[1], colorDanger[2]);
+      doc.text(`Obs: ${obs}`, x + 4, y + 16); 
     }
   };
 
-  const colStatusW = contentWidth / 3;
-  drawStatusCard("OM Finalizada?", report.isOmFinished, margin, colStatusW);
-  drawStatusCard("Houve Desvio?", report.iamoDeviation, margin + colStatusW, colStatusW, report.iamoDeviation ? report.iamoExplanation : undefined);
-  drawStatusCard("Pendências?", report.hasPendencies, margin + (colStatusW * 2), colStatusW, report.hasPendencies ? report.pendencyExplanation : undefined);
+  const sw = contentWidth / 3;
+  drawStatus("OM Finalizada?", report.isOmFinished, margin, sw);
+  drawStatus("Houve Desvio?", report.iamoDeviation, margin + sw, sw, report.iamoDeviation ? report.iamoExplanation : undefined);
+  drawStatus("Pendências?", report.hasPendencies, margin + (sw * 2), sw, report.hasPendencies ? report.pendencyExplanation : undefined);
   
   y += (report.iamoDeviation || report.hasPendencies) ? 20 : 12;
 
-  // Observações Gerais
-  if (report.observations) {
-      drawCell("Observações Gerais", report.observations, margin, y, contentWidth, 14, true);
-      y += 14;
-  }
-
-  // 6. RODAPÉ - ATUALIZADO
-  const footerY = pageHeight - 25;
-  
+  // 6. RODAPÉ COM FONTE PEQUENA
+  const footerY = pageHeight - 15;
   doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
   doc.line(margin, footerY, pageWidth - margin, footerY);
   
-  doc.setFontSize(7);
+  doc.setFontSize(6.5); // Fonte ainda menor para o rodapé
   doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
-  doc.text("SISTEMA DE RELATÓRIOS", margin, footerY + 4);
-  
-  doc.setFontSize(9);
-  doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
-  doc.setFont('helvetica', 'bold');
-  // Alterado para a frase solicitada pelo usuário
-  doc.text("Relatorio gerado via app reportmaster criado por Rafael", margin, footerY + 10);
-  
-  doc.setFontSize(7);
-  doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
-  doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, pageWidth - margin, footerY + 10, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.text("Relatorio gerado via app reportmaster criado por Rafael", margin, footerY + 5);
+  doc.text(`Data Emissão: ${new Date().toLocaleDateString()}`, pageWidth - margin, footerY + 5, { align: 'right' });
 
-
-  // --- PÁGINA 2+: FOTOS ---
+  // PÁGINA DE FOTOS
   if (report.photos && report.photos.length > 0) {
     doc.addPage();
     y = margin;
-
     drawSectionHeader("Registro Fotográfico", y);
     y += 10;
-
-    const colWidth = (contentWidth - 10) / 2; // 2 colunas com 10mm de gap
-    const imgHeight = 70; // Altura fixa para imagem
-    const captionHeight = 15; // Altura para legenda
-    const itemHeight = imgHeight + captionHeight;
+    const colW = (contentWidth - 10) / 2;
     let col = 0;
-    
     for (const photo of report.photos) {
-      // Verifica quebra de página
-      if (y + itemHeight > pageHeight - margin) {
-        doc.addPage();
-        y = margin;
-        drawSectionHeader("Registro Fotográfico (Cont.)", y);
-        y += 10;
-        col = 0;
-      }
-
-      const xPos = margin + (col * (colWidth + 10));
-      
-      // Box Container
+      if (y + 85 > pageHeight - margin) { doc.addPage(); y = margin; col = 0; }
+      const x = margin + (col * (colW + 10));
       doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
-      doc.setFillColor(255, 255, 255);
-      doc.rect(xPos, y, colWidth, itemHeight, 'FD');
-
-      // Imagem
+      doc.rect(x, y, colW, 85);
       try {
-        const imgUrl = typeof photo === 'string' ? photo : photo.url;
-        if (imgUrl && imgUrl.startsWith('data:image')) {
-             doc.addImage(imgUrl, 'JPEG', xPos + 1, y + 1, colWidth - 2, imgHeight - 2);
-        }
-      } catch (e) {
-          doc.setFontSize(8);
-          doc.text("Erro na imagem", xPos + 5, y + 20);
-      }
-
-      // Legenda (Fundo cinza claro)
+        const url = typeof photo === 'string' ? photo : photo.url;
+        if (url.startsWith('data:image')) doc.addImage(url, 'JPEG', x + 1, y + 1, colW - 2, 70);
+      } catch (e) {}
       doc.setFillColor(colorGrayBg[0], colorGrayBg[1], colorGrayBg[2]);
-      doc.rect(xPos, y + imgHeight, colWidth, captionHeight, 'F');
-      
-      doc.setFontSize(8);
-      doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
-      const captionText = typeof photo === 'string' ? '' : photo.caption || 'Sem legenda';
-      const splitCaption = doc.splitTextToSize(captionText, colWidth - 4);
-      doc.text(splitCaption, xPos + 2, y + imgHeight + 5);
-
-      col++;
-      if (col > 1) {
-        col = 0;
-        y += itemHeight + 10; // Espaço entre linhas
-      }
+      doc.rect(x, y + 71, colW, 14, 'F');
+      doc.setFontSize(7); doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
+      const cap = typeof photo === 'string' ? '' : photo.caption || 'Sem legenda';
+      doc.text(doc.splitTextToSize(cap, colW - 4), x + 2, y + 76);
+      col++; if (col > 1) { col = 0; y += 95; }
     }
   }
 
-  const fileName = `Relatorio_${report.omNumber || 'OM'}_${report.date}.pdf`;
-  doc.save(fileName);
+  doc.save(`Relatorio_${report.omNumber || 'OM'}_${report.date}.pdf`);
 };
