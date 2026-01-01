@@ -3,14 +3,23 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ReportMaster Offline</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/906/906343.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
@@ -20,6 +29,12 @@
         input:read-only {
             background-color: #f1f5f9;
             cursor: not-allowed;
+        }
+        /* Otimização para modo App Instalado */
+        @media (display-mode: standalone) {
+            .sticky-header {
+                padding-top: env(safe-area-inset-top);
+            }
         }
     </style>
 <script type="importmap">
@@ -36,10 +51,19 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body>
     <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
+    <script>
+        // Registro do Service Worker para funcionalidade Offline
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW registrado com sucesso!', reg.scope))
+                    .catch(err => console.log('Falha ao registrar SW:', err));
+            });
+        }
+    </script>
 </body>
 </html>

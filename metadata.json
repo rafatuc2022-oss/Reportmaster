@@ -3,5 +3,8 @@
   "description": "Um aplicativo robusto para elaboração de relatórios de atividades industriais com suporte offline, fotos e geração de PDF.",
   "requestFramePermissions": [
     "camera"
-  ]
+  ],
+  "short_name": "ReportMaster",
+  "theme_color": "#1e3a8a",
+  "background_color": "#f8fafc"
 }
