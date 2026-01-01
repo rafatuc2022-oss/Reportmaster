@@ -90,7 +90,7 @@ export const generatePDF = async (report: Report) => {
 
   y += 18;
 
-  // 2. DADOS DO EQUIPAMENTO E LOCAL
+  // 2. DADOS DO EQUIPAMENTO E LOCAL (IDENTIFICAÇÃO)
   y += drawSectionHeader("Identificação", y);
   
   // Linha 1
@@ -102,6 +102,10 @@ export const generatePDF = async (report: Report) => {
   drawCell("Centro de Trabalho", report.workCenter, margin, y, contentWidth * 0.33, 12);
   drawCell("Equipe / Turno", report.teamShift, margin + (contentWidth * 0.33), y, contentWidth * 0.33, 12);
   drawCell("Tipo Atividade", report.activityType.toUpperCase(), margin + (contentWidth * 0.66), y, contentWidth * 0.34, 12);
+  y += 12;
+
+  // Linha 3 (NOVO: Técnicos integrados na Identificação conforme pedido)
+  drawCell("Responsáveis Técnicos", report.technicians || "Não informado", margin, y, contentWidth, 12);
   y += 12;
 
   // 3. CRONOGRAMA
@@ -205,7 +209,7 @@ export const generatePDF = async (report: Report) => {
       y += 14;
   }
 
-  // 6. RODAPÉ - RESPONSÁVEIS
+  // 6. RODAPÉ - ATUALIZADO
   const footerY = pageHeight - 25;
   
   doc.setDrawColor(colorGrayBorder[0], colorGrayBorder[1], colorGrayBorder[2]);
@@ -213,16 +217,17 @@ export const generatePDF = async (report: Report) => {
   
   doc.setFontSize(7);
   doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
-  doc.text("RESPONSÁVEIS TÉCNICOS", margin, footerY + 4);
+  doc.text("SISTEMA DE RELATÓRIOS", margin, footerY + 4);
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(colorTextValue[0], colorTextValue[1], colorTextValue[2]);
   doc.setFont('helvetica', 'bold');
-  doc.text(report.technicians || "Não informado", margin, footerY + 10);
+  // Alterado para a frase solicitada pelo usuário
+  doc.text("Relatorio gerado via app reportmaster criado por Rafael", margin, footerY + 10);
   
   doc.setFontSize(7);
   doc.setTextColor(colorTextLabel[0], colorTextLabel[1], colorTextLabel[2]);
-  doc.text("Gerado via ReportMaster Offline", pageWidth - margin, footerY + 10, { align: 'right' });
+  doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, pageWidth - margin, footerY + 10, { align: 'right' });
 
 
   // --- PÁGINA 2+: FOTOS ---
@@ -260,8 +265,6 @@ export const generatePDF = async (report: Report) => {
       try {
         const imgUrl = typeof photo === 'string' ? photo : photo.url;
         if (imgUrl && imgUrl.startsWith('data:image')) {
-             // Ajuste de proporção 'cover' manual seria complexo, usaremos 'contain' básico
-             // ou preenchendo o box da imagem. Vamos centralizar.
              doc.addImage(imgUrl, 'JPEG', xPos + 1, y + 1, colWidth - 2, imgHeight - 2);
         }
       } catch (e) {
