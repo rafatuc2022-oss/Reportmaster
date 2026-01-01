@@ -336,18 +336,18 @@ ${data.activityExecuted}
     const base = "w-full px-4 py-3 rounded-xl border-2 outline-none font-semibold text-sm transition-all text-slate-700 shadow-sm ";
     const state = errors[fieldName] 
       ? "border-red-400 bg-red-50 focus:border-red-500 animate-pulse" 
-      : "border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-500 focus:shadow-blue-100/50";
+      : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:shadow-blue-100/50";
     return base + state;
   };
 
-  const labelStyle = "text-[10px] font-black uppercase text-slate-400 mb-1.5 flex items-center gap-1 tracking-wider";
+  const labelStyle = "text-[10px] font-black uppercase text-slate-500 mb-1.5 flex items-center gap-1 tracking-wider";
 
   const currentShiftTechs = SHIFT_TECHNICIANS[formData.teamShift] || [];
 
   return (
-    <div className="min-h-screen bg-slate-200 pb-44">
+    <div className="min-h-screen bg-slate-950 pb-44">
       {/* 1. HEADER */}
-      <div className="bg-white border-b border-slate-200 px-5 py-4 sticky top-0 z-50 flex items-center gap-4 shadow-md shadow-slate-200/50">
+      <div className="bg-white border-b border-slate-200 px-5 py-4 sticky top-0 z-50 flex items-center gap-4 shadow-xl">
         <button type="button" onClick={onCancel} className="p-2 -ml-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
@@ -359,10 +359,10 @@ ${data.activityExecuted}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-2 sm:p-5 space-y-6 w-full max-w-full">
+      <form onSubmit={handleSubmit} className="p-0 sm:p-5 space-y-6 w-full max-w-full">
         
         {/* 2. DADOS INICIAIS */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
             <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">🚜</span>
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Dados Iniciais</h3>
@@ -384,7 +384,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 3. N° OM e TIPO */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
             <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg text-lg">📂</span>
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Ordem de Manutenção</h3>
@@ -411,7 +411,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 5. HORÁRIOS / IAMO */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-orange-100 text-orange-600 p-1.5 rounded-lg text-lg">⏰</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Cronograma</h3>
@@ -446,7 +446,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 6. EXECUÇÃO */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-lg">📝</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Execução</h3>
@@ -457,22 +457,22 @@ ${data.activityExecuted}
           </div>
           <div>
             <label className={labelStyle}>📈 Atividades Executadas <span className="text-red-500">*</span></label>
-            <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={getFieldStyle('activityExecuted') + " min-h-[250px] bg-yellow-50/50 border-yellow-200/50 focus:bg-white resize-none font-medium leading-relaxed text-sm"} placeholder="✅ Detalhe as ações executadas..." />
+            <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={getFieldStyle('activityExecuted') + " min-h-[250px] bg-amber-50/50 border-amber-100 focus:bg-white resize-none font-medium leading-relaxed text-sm"} placeholder="✅ Detalhe as ações executadas..." />
           </div>
         </div>
 
         {/* 8. CONCLUSÃO */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-purple-100 text-purple-600 p-1.5 rounded-lg text-lg">🏁</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Conclusão</h3>
            </div>
            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
+              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
                 <span className="text-[10px] font-black uppercase text-slate-600 leading-none">OM Finalizada</span>
                 <input type="checkbox" name="isOmFinished" checked={formData.isOmFinished} onChange={handleChange} className="w-5 h-5 accent-emerald-500" />
               </label>
-              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
+              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
                 <span className="text-[10px] font-black uppercase text-slate-600 leading-none">Com Pendência</span>
                 <input type="checkbox" name="hasPendencies" checked={formData.hasPendencies} onChange={handleChange} className="w-5 h-5 accent-amber-500" />
               </label>
@@ -490,7 +490,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 9. RESPONSÁVEIS */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">👥</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Responsáveis</h3>
@@ -519,7 +519,7 @@ ${data.activityExecuted}
            
            <div>
               <label className={labelStyle}>👥 Seleção Rápida de Equipe (Turno {formData.teamShift})</label>
-              <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+              <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 {currentShiftTechs.map(name => {
                   const isSelected = formData.technicians.toLowerCase().includes(name.toLowerCase());
                   return (
@@ -529,8 +529,8 @@ ${data.activityExecuted}
                       onClick={() => toggleTechnician(name)}
                       className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border-2 ${
                         isSelected 
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105' 
-                        : 'bg-white border-slate-200 text-slate-500 hover:border-blue-300'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
+                        : 'bg-white border-slate-200 text-slate-500'
                       }`}
                     >
                       {isSelected && <span className="mr-1">✓</span>}
@@ -546,7 +546,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 10. EVIDÊNCIAS */}
-        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
+        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-4">
           <div className="flex items-center gap-2">
              <span className="bg-pink-100 text-pink-600 p-1.5 rounded-lg text-lg">📸</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Evidências</h3>
@@ -554,12 +554,12 @@ ${data.activityExecuted}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
             {formData.photos.map((photo) => (
               <div key={photo.id} className="flex flex-col gap-2">
-                  <div className="aspect-square rounded-2xl overflow-hidden relative group border-2 border-slate-100 shadow-sm bg-slate-100">
+                  <div className="aspect-square rounded-2xl overflow-hidden relative group border-2 border-slate-200 shadow-sm bg-slate-100">
                     <img src={photo.url} className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => setFormData(p => ({...p, photos: p.photos.filter(ph => ph.id !== photo.id)}))} className="absolute top-2 right-2 bg-red-600/90 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                    <button type="button" onClick={() => setFormData(p => ({...p, photos: p.photos.filter(ph => ph.id !== photo.id)}))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
-                     <button type="button" onClick={() => openEditor(photo.id)} className="absolute bottom-2 right-2 bg-blue-600/90 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                     <button type="button" onClick={() => openEditor(photo.id)} className="absolute bottom-2 right-2 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </button>
                   </div>
@@ -568,19 +568,19 @@ ${data.activityExecuted}
             ))}
             {!formData.isTemplate ? (
               <>
-                <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-blue-200 flex flex-col items-center justify-center text-blue-500 hover:border-blue-400 hover:bg-blue-50 transition-all gap-1 group bg-white">
+                <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-500 hover:bg-blue-50 transition-all bg-slate-50">
                   <span className="text-3xl mb-1">📷</span>
                   <span className="text-[9px] font-black uppercase tracking-wide">Câmera</span>
                 </button>
                 <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
-                <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-indigo-200 flex flex-col items-center justify-center text-indigo-500 hover:border-indigo-400 hover:bg-indigo-50 transition-all gap-1 group bg-white">
+                <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-indigo-300 flex flex-col items-center justify-center text-indigo-500 hover:bg-indigo-50 transition-all bg-slate-50">
                   <span className="text-3xl mb-1">🖼️</span>
                   <span className="text-[9px] font-black uppercase tracking-wide">Galeria</span>
                 </button>
                 <input ref={galleryInputRef} type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
               </>
             ) : (
-              <div className="col-span-full py-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+              <div className="col-span-full py-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
                 <span className="text-2xl mb-2 opacity-30">💾</span>
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Salve para adicionar fotos</p>
               </div>
@@ -588,36 +588,9 @@ ${data.activityExecuted}
           </div>
         </div>
 
-        {/* MODAL EDITOR */}
-        {editingPhotoId && (
-            <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col animate-in fade-in duration-200">
-                <div className="flex justify-between items-center p-4 bg-black">
-                    <button type="button" onClick={closeEditor} className="text-white px-4 py-2 text-sm font-bold uppercase">Cancelar</button>
-                    <span className="text-white font-bold text-sm">Rabiscar Foto</span>
-                    <button type="button" onClick={saveEditedImage} className="text-emerald-400 px-4 py-2 text-sm font-bold uppercase">Concluir</button>
-                </div>
-                <div className="flex-1 overflow-hidden relative touch-none flex items-center justify-center bg-[#111]">
-                    <canvas ref={canvasRef} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} className="max-w-full max-h-full object-contain border border-white/20" />
-                </div>
-            </div>
-        )}
-
-        {/* TOAST ERRO */}
-        {validationMsg && (
-            <div className="fixed bottom-24 left-4 right-4 z-[60] animate-in slide-in-from-bottom-5 fade-in duration-300">
-                <div className="bg-red-500 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 border-2 border-red-400">
-                    <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    <div>
-                        <p className="font-bold text-sm uppercase tracking-wider mb-0.5">Atenção</p>
-                        <p className="text-xs font-medium opacity-90 leading-snug">{validationMsg}</p>
-                    </div>
-                </div>
-            </div>
-        )}
-
         {/* ACTIONS */}
         <div className="fixed bottom-0 left-0 right-0 z-50">
-           <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-3xl">
+           <div className="bg-white border-t border-slate-200 p-4 shadow-[0_-5px_30px_rgba(0,0,0,0.2)] rounded-t-3xl">
               <div className="w-full max-w-md mx-auto flex gap-3">
                   {isEdit && !formData.isTemplate ? (
                     <>

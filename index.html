@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>ReportMaster Offline</title>
@@ -18,13 +18,10 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e2e8f0; /* slate-200 */
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         input:read-only {
             background-color: #f1f5f9;
@@ -55,15 +52,5 @@
 <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-    <script>
-        // Registro do Service Worker para funcionalidade Offline
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('SW registrado com sucesso!', reg.scope))
-                    .catch(err => console.log('Falha ao registrar SW:', err));
-            });
-        }
-    </script>
 </body>
 </html>
