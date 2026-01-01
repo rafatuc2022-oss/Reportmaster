@@ -8,9 +8,10 @@ interface Props {
   onDelete: (id: string) => void;
   onPrint: (report: Report) => void;
   onMarkExported: (report: Report) => void;
+  onQuickUse: (report: Report) => void;
 }
 
-const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMarkExported }) => {
+const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMarkExported, onQuickUse }) => {
   // Função para verificar se é um UUID (criado manualmente)
   const isManualTemplate = (id: string) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -22,10 +23,10 @@ const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMar
       {reports.map((report) => (
         <div 
           key={report.id}
-          className={`rounded-3xl shadow-sm hover:shadow-md transition-all cursor-pointer group flex relative overflow-hidden active:scale-[0.99] border-2 ${
+          className={`rounded-3xl shadow-lg transition-all cursor-pointer group flex relative overflow-hidden active:scale-[0.99] border-2 ${
             report.isExported 
               ? 'bg-emerald-50 border-emerald-300' 
-              : 'bg-slate-100/80 border-slate-200'
+              : 'bg-white border-slate-200'
           }`}
           onClick={() => onEdit(report)}
         >
@@ -34,10 +35,10 @@ const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMar
 
           <div className="flex-1 p-5">
             <div className="flex justify-between items-start gap-3 mb-3">
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-black text-slate-500 bg-white/80 px-2 py-1 rounded-md uppercase tracking-wider border border-slate-200">
-                    OM: {report.omNumber || '---'}
+                  <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider border border-slate-200">
+                    {report.isTemplate ? 'Modelo' : `OM: ${report.omNumber || '---'}`}
                   </span>
                   {!report.isTemplate && (
                      <>
@@ -74,19 +75,30 @@ const ReportList: React.FC<Props> = ({ reports, onEdit, onDelete, onPrint, onMar
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200/50">
-              <div className="flex flex-col bg-white/50 p-2 rounded-lg border border-slate-200/50">
-                <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Data</span>
-                <span className="font-bold text-xs text-slate-700">{report.date ? report.date.split('-').reverse().join('/') : '--/--'}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-100">
+              <div className="grid grid-cols-3 gap-2 flex-1">
+                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Data</span>
+                  <span className="font-bold text-xs text-slate-700">{report.date ? report.date.split('-').reverse().join('/') : '--/--'}</span>
+                </div>
+                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Início</span>
+                  <span className="font-bold text-xs text-emerald-600">{report.startTime || '--:--'}</span>
+                </div>
+                <div className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Fim</span>
+                  <span className="font-bold text-xs text-red-500">{report.endTime || '--:--'}</span>
+                </div>
               </div>
-              <div className="flex flex-col bg-white/50 p-2 rounded-lg border border-slate-200/50">
-                <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Início</span>
-                <span className="font-bold text-xs text-emerald-600">{report.startTime || '--:--'}</span>
-              </div>
-              <div className="flex flex-col bg-white/50 p-2 rounded-lg border border-slate-200/50">
-                <span className="font-black text-slate-400 uppercase text-[8px] tracking-wider mb-0.5">Fim</span>
-                <span className="font-bold text-xs text-red-500">{report.endTime || '--:--'}</span>
-              </div>
+
+              {report.isTemplate && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onQuickUse(report); }}
+                  className="bg-blue-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-md active:scale-95 shrink-0"
+                >
+                  <span>🛠️</span> Utilizar Modelo
+                </button>
+              )}
             </div>
           </div>
         </div>

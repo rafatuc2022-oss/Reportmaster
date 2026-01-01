@@ -33,6 +33,28 @@ const App: React.FC = () => {
     setView('EDIT');
   };
 
+  // Função para utilizar o modelo instantaneamente (sem abrir o formulário)
+  const handleQuickUse = (template: Report) => {
+    const getTodayStr = () => new Date().toISOString().split('T')[0];
+    
+    const newFilledReport: Report = { 
+      ...template, 
+      id: crypto.randomUUID(), 
+      createdAt: Date.now(), 
+      isTemplate: false, 
+      date: getTodayStr(),
+      category: activeCategory,
+      isExported: false
+    };
+
+    storage.addReport(newFilledReport);
+    setReports(storage.getReports());
+    setActiveTab('RELATÓRIOS');
+    
+    // Feedback tátil/visual se necessário (alerta leve ou scroll)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSave = (formData: Report) => {
     if (view === 'CREATE') {
       const templateToSave = { ...formData, isTemplate: true, category: activeCategory };
@@ -270,7 +292,14 @@ const App: React.FC = () => {
                       <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">Nenhum item encontrado.</p>
                     </div>
                   ) : (
-                    <ReportList reports={filteredReports} onEdit={handleEdit} onDelete={handleDelete} onPrint={handlePrint} onMarkExported={handleMarkAsExported} />
+                    <ReportList 
+                      reports={filteredReports} 
+                      onEdit={handleEdit} 
+                      onDelete={handleDelete} 
+                      onPrint={handlePrint} 
+                      onMarkExported={handleMarkAsExported}
+                      onQuickUse={handleQuickUse} 
+                    />
                   )}
                 </div>
               </>

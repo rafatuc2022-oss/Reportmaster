@@ -222,63 +222,81 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
       }
   };
 
+  // Efeito para carregar a imagem no canvas quando o ID de edição mudar
   useEffect(() => {
-      if (editingPhotoId && canvasRef.current) {
-          const photo = formData.photos.find(p => p.id === editingPhotoId);
-          if (photo) {
-              const canvas = canvasRef.current;
-              const ctx = canvas.getContext('2d');
-              const img = new Image();
-              img.src = photo.url;
-              img.onload = () => {
-                  canvas.width = img.width;
-                  canvas.height = img.height;
-                  ctx?.drawImage(img, 0, 0);
-                  if (ctx) {
-                      ctx.strokeStyle = "red";
-                      ctx.lineWidth = 5;
-                      ctx.lineCap = "round";
-                  }
-              };
-          }
-      }
-  }, [editingPhotoId]);
+    if (editingPhotoId) {
+      // Pequeno timeout para garantir que o canvas já foi montado no DOM
+      const timer = setTimeout(() => {
+        const photo = formData.photos.find(p => p.id === editingPhotoId);
+        if (photo && canvasRef.current) {
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.src = photo.url;
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              ctx.strokeStyle = "red";
+              ctx.lineWidth = 8;
+              ctx.lineCap = "round";
+              ctx.lineJoin = "round";
+            }
+          };
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [editingPhotoId, formData.photos]);
+
+  const getCoordinates = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
 
   const startDrawing = (e: any) => {
-      setIsDrawing(true);
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX || e.touches[0].clientX) - rect.left;
-      const y = (e.clientY || e.touches[0].clientY) - rect.top;
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
+    if (e.type === 'touchstart') e.preventDefault();
+    setIsDrawing(true);
+    const { x, y } = getCoordinates(e);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) {
       ctx.beginPath();
-      ctx.moveTo(x * scaleX, y * scaleY);
+      ctx.moveTo(x, y);
+    }
   };
 
   const draw = (e: any) => {
-      if (!isDrawing || !canvasRef.current) return;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-      const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      ctx.lineTo(x * scaleX, y * scaleY);
+    if (!isDrawing) return;
+    if (e.type === 'touchmove') e.preventDefault();
+    const { x, y } = getCoordinates(e);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) {
+      ctx.lineTo(x, y);
       ctx.stroke();
+    }
   };
 
   const stopDrawing = () => {
-      setIsDrawing(false);
-      const ctx = canvasRef.current?.getContext('2d');
-      ctx?.closePath();
+    setIsDrawing(false);
   };
 
   const handleExportAction = (type: 'PDF' | 'WHATSAPP') => {
@@ -587,6 +605,49 @@ ${data.activityExecuted}
             )}
           </div>
         </div>
+
+        {/* MODAL EDITOR DE FOTO */}
+        {editingPhotoId && (
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in duration-200">
+                <div className="flex justify-between items-center p-4 bg-slate-900 border-b border-slate-800">
+                    <button type="button" onClick={closeEditor} className="text-white px-4 py-2 text-xs font-black uppercase tracking-widest bg-slate-800 rounded-lg">Cancelar</button>
+                    <span className="text-white font-black text-xs uppercase tracking-widest">Rabiscar Evidência</span>
+                    <button type="button" onClick={saveEditedImage} className="text-white px-4 py-2 text-xs font-black uppercase tracking-widest bg-emerald-600 rounded-lg">Concluir</button>
+                </div>
+                <div className="flex-1 overflow-hidden relative touch-none flex items-center justify-center bg-black">
+                    <canvas 
+                        ref={canvasRef} 
+                        onMouseDown={startDrawing} 
+                        onMouseMove={draw} 
+                        onMouseUp={stopDrawing} 
+                        onMouseLeave={stopDrawing} 
+                        onTouchStart={startDrawing} 
+                        onTouchMove={draw} 
+                        onTouchEnd={stopDrawing} 
+                        className="max-w-full max-h-full object-contain cursor-crosshair" 
+                    />
+                </div>
+                <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-center gap-4">
+                   <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-red-600 border border-white"></div>
+                      <span className="text-[10px] font-black text-white uppercase tracking-widest">Pincel Vermelho</span>
+                   </div>
+                </div>
+            </div>
+        )}
+
+        {/* TOAST ERRO */}
+        {validationMsg && (
+            <div className="fixed bottom-24 left-4 right-4 z-[60] animate-in slide-in-from-bottom-5 fade-in duration-300">
+                <div className="bg-red-500 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 border-2 border-red-400">
+                    <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <p className="font-bold text-sm uppercase tracking-wider mb-0.5">Atenção</p>
+                        <p className="text-xs font-medium opacity-90 leading-snug">{validationMsg}</p>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {/* ACTIONS */}
         <div className="fixed bottom-0 left-0 right-0 z-50">
