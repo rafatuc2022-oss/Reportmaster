@@ -328,7 +328,6 @@ ${data.activityExecuted}
 
 👥 Técnicos: ${data.technicians}`;
 
-    // Uso da URL da API oficial para garantir a codificação dos emojis
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -346,7 +345,7 @@ ${data.activityExecuted}
   const currentShiftTechs = SHIFT_TECHNICIANS[formData.teamShift] || [];
 
   return (
-    <div className="min-h-screen bg-[#f3f6f8] pb-44">
+    <div className="min-h-screen bg-slate-200 pb-44">
       {/* 1. HEADER */}
       <div className="bg-white border-b border-slate-200 px-5 py-4 sticky top-0 z-50 flex items-center gap-4 shadow-md shadow-slate-200/50">
         <button type="button" onClick={onCancel} className="p-2 -ml-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
@@ -360,10 +359,10 @@ ${data.activityExecuted}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-5 space-y-6 max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="p-2 sm:p-5 space-y-6 w-full max-w-full">
         
         {/* 2. DADOS INICIAIS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
             <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">🚜</span>
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Dados Iniciais</h3>
@@ -385,7 +384,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 3. N° OM e TIPO */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
             <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg text-lg">📂</span>
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Ordem de Manutenção</h3>
@@ -412,7 +411,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 5. HORÁRIOS / IAMO */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-orange-100 text-orange-600 p-1.5 rounded-lg text-lg">⏰</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Cronograma</h3>
@@ -447,7 +446,7 @@ ${data.activityExecuted}
         </div>
 
         {/* 6. EXECUÇÃO */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-lg">📝</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Execução</h3>
@@ -463,18 +462,18 @@ ${data.activityExecuted}
         </div>
 
         {/* 8. CONCLUSÃO */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-purple-100 text-purple-600 p-1.5 rounded-lg text-lg">🏁</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Conclusão</h3>
            </div>
-           <div className="grid grid-cols-2 gap-4">
-              <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
-                <span className="text-[10px] font-black uppercase text-slate-600">OM Finalizada</span>
+           <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
+                <span className="text-[10px] font-black uppercase text-slate-600 leading-none">OM Finalizada</span>
                 <input type="checkbox" name="isOmFinished" checked={formData.isOmFinished} onChange={handleChange} className="w-5 h-5 accent-emerald-500" />
               </label>
-              <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
-                <span className="text-[10px] font-black uppercase text-slate-600">Com Pendência</span>
+              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
+                <span className="text-[10px] font-black uppercase text-slate-600 leading-none">Com Pendência</span>
                 <input type="checkbox" name="hasPendencies" checked={formData.hasPendencies} onChange={handleChange} className="w-5 h-5 accent-amber-500" />
               </label>
            </div>
@@ -491,12 +490,12 @@ ${data.activityExecuted}
         </div>
 
         {/* 9. RESPONSÁVEIS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-5">
            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
              <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">👥</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Responsáveis</h3>
            </div>
-           <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelStyle}>Equipe / Turno</label>
                 <select name="teamShift" value={formData.teamShift} onChange={handleChange} className={getFieldStyle('teamShift')}>
@@ -547,12 +546,12 @@ ${data.activityExecuted}
         </div>
 
         {/* 10. EVIDÊNCIAS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
+        <div className="bg-white p-4 sm:p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4">
           <div className="flex items-center gap-2">
              <span className="bg-pink-100 text-pink-600 p-1.5 rounded-lg text-lg">📸</span>
              <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Evidências</h3>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
             {formData.photos.map((photo) => (
               <div key={photo.id} className="flex flex-col gap-2">
                   <div className="aspect-square rounded-2xl overflow-hidden relative group border-2 border-slate-100 shadow-sm bg-slate-100">
@@ -619,15 +618,15 @@ ${data.activityExecuted}
         {/* ACTIONS */}
         <div className="fixed bottom-0 left-0 right-0 z-50">
            <div className="bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] rounded-t-3xl">
-              <div className="max-w-2xl mx-auto flex gap-3">
+              <div className="w-full max-w-md mx-auto flex gap-3">
                   {isEdit && !formData.isTemplate ? (
                     <>
-                      <button type="submit" className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30"><span>💾</span> Salvar</button>
-                      <button type="button" onClick={() => handleExportAction('PDF')} className="bg-slate-100 text-slate-600 w-16 rounded-2xl font-black text-2xl hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center border border-slate-200">📄</button>
-                      <button type="button" onClick={() => handleExportAction('WHATSAPP')} className="bg-[#25D366] text-white w-16 rounded-2xl font-black text-xl hover:bg-[#20bd5a] active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-green-600/30"><svg className="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
+                      <button type="submit" className="flex-1 bg-blue-600 text-white py-3.5 rounded-xl font-black text-[13px] uppercase tracking-widest hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30"><span>💾</span> Salvar</button>
+                      <button type="button" onClick={() => handleExportAction('PDF')} className="bg-slate-100 text-slate-600 w-14 h-14 rounded-xl font-black text-2xl hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center border border-slate-200 shrink-0">📄</button>
+                      <button type="button" onClick={() => handleExportAction('WHATSAPP')} className="bg-[#25D366] text-white w-14 h-14 rounded-xl font-black text-xl hover:bg-[#20bd5a] active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-green-600/30 shrink-0"><svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
                     </>
                   ) : (
-                    <button type="submit" className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-400 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"><span>🛠️</span> Utilizar Esse Modelo</button>
+                    <button type="submit" className="flex-1 bg-emerald-500 text-white py-3.5 rounded-xl font-black text-[13px] uppercase tracking-widest hover:bg-emerald-400 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"><span>🛠️</span> Utilizar Esse Modelo</button>
                   )}
                </div>
            </div>

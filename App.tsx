@@ -72,7 +72,6 @@ const App: React.FC = () => {
     generatePDF(report);
   };
 
-  // --- FUNÇÕES DE BACKUP ---
   const handleExportBackup = () => {
     const data = storage.getReports();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -145,7 +144,7 @@ const App: React.FC = () => {
   }, [filteredReports]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-6 relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-200 pb-6 relative overflow-x-hidden">
       
       {/* --- SIDE MENU (DRAWER) --- */}
       <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -218,7 +217,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-4 space-y-4">
+      <main className={`max-w-4xl mx-auto space-y-4 ${view === 'LIST' ? 'p-4' : 'p-0'}`}>
         {view === 'LIST' ? (
           <>
             <div className="relative">
@@ -232,16 +231,16 @@ const App: React.FC = () => {
                  placeholder="Pesquisar por OM ou Descrição..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-500"
+                 className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-slate-300 bg-white shadow-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm font-medium text-slate-500"
                />
             </div>
 
-            <div className="flex bg-slate-200/50 p-1.5 rounded-2xl gap-1.5">
+            <div className="flex bg-slate-300/50 p-1.5 rounded-2xl gap-1.5">
                <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'}`}>🔧 Fixos</button>
                <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-xl font-black text-xs transition-all uppercase tracking-widest ${activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'}`}>🚛 Móveis</button>
             </div>
 
-            <div className="flex border-b border-slate-200">
+            <div className="flex border-b border-slate-300">
                {['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA'].map(tab => (
                  <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-3 font-black text-[10px] uppercase tracking-tighter border-b-4 transition-all ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400'}`}>{tab.replace('MEUS ', '')}</button>
                ))}
@@ -266,7 +265,7 @@ const App: React.FC = () => {
                 )}
                 <div className="space-y-3">
                   {filteredReports.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                    <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-slate-300">
                       <span className="text-5xl block mb-4 grayscale opacity-30">📂</span>
                       <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Nenhum item encontrado.</p>
                     </div>
