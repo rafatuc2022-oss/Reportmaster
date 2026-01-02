@@ -34,7 +34,6 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
   });
 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  const [validationMsg, setValidationMsg] = useState<string | null>(null);
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -48,7 +47,6 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
     if (name === 'omNumber') finalValue = value.replace(/\D/g, ''); 
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : finalValue }));
     if (finalValue) setErrors(prev => { const n = {...prev}; delete n[name]; return n; });
-    if (validationMsg) setValidationMsg(null);
   };
 
   const toggleTechnician = (name: string) => {
@@ -57,9 +55,10 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
       const next = current.includes(name) ? current.filter(t => t !== name) : [...current, name];
       return { ...prev, technicians: next.join(', ') };
     });
+    setErrors(prev => { const n = {...prev}; delete n['technicians']; return n; });
   };
 
-  const validate = (forceStrict = false) => {
+  const validate = () => {
     const nE: Record<string, boolean> = {};
     const check = (f: keyof Report) => { if (!formData[f]) nE[f as string] = true; };
     
@@ -72,14 +71,13 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
 
     setErrors(nE);
     if (Object.keys(nE).length > 0) {
-      setValidationMsg("Preencha os campos destacados para continuar.");
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (validate(false)) onSave(formData); };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (validate()) onSave(formData); };
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -146,12 +144,11 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
   }, [editingPhotoId, formData.photos]);
 
   const handleExportAction = (type: 'PDF' | 'WHATSAPP') => {
-    if (!validate(true)) return;
+    if (!validate()) return;
     const upd = { ...formData, isExported: true };
     setFormData(upd); onMarkExported(upd);
     if (type === 'PDF') generatePDF(upd);
     else {
-        // Modelo exato solicitado pelo usuário com espaçamento rigoroso
         const text = `*RELATÓRIO DE EXECUÇÃO*
 *AUTOMAÇÃO MINA SERRA SUL*
    
@@ -191,8 +188,8 @@ ${upd.activityExecuted}
     }
   };
 
-  const inputStyle = (f: string) => `w-full bg-slate-900 border-2 px-5 py-4 rounded-xl outline-none text-base font-bold transition-all ${errors[f] ? 'border-red-500 bg-red-500/5 animate-pulse' : 'border-slate-800 focus:border-sky-500 focus:bg-slate-950 text-white shadow-md'}`;
-  const labelStyle = "text-[11px] font-black uppercase text-slate-500 mb-2.5 block tracking-[0.2em] ml-1";
+  const inputStyle = (f: string) => `w-full bg-slate-900 border-2 px-5 py-4 rounded-xl outline-none text-base font-bold transition-all shadow-md ${errors[f] ? 'border-red-500 bg-red-500/10 animate-pulse ring-2 ring-red-500/20' : 'border-slate-800 focus:border-sky-500 focus:bg-slate-950 text-white'}`;
+  const labelStyle = (f: string) => `text-[11px] font-black uppercase mb-2.5 block tracking-[0.2em] ml-1 transition-colors ${errors[f] ? 'text-red-500' : 'text-slate-500'}`;
   const sectionHeader = "flex items-center gap-4 mb-8 pb-3 border-b border-white/10";
 
   return (
@@ -214,48 +211,46 @@ ${upd.activityExecuted}
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6 max-w-xl mx-auto">
         
-        {/* CONDIÇÃO: SE FOR APENAS MODELO, MOSTRA APENAS OS CAMPOS DE DEFINIÇÃO */}
         {formData.isTemplate ? (
-          <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+          <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${Object.keys(errors).length > 0 ? 'border-red-500/30' : 'border-slate-800'}`}>
              <div className={sectionHeader}>
                 <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">📋</div>
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Configuração do Modelo</h3>
              </div>
              <div>
-                <label className={labelStyle}>♻️ Descrição da OM</label>
+                <label className={labelStyle('omDescription')}>♻️ Descrição da OM</label>
                 <textarea name="omDescription" value={formData.omDescription} onChange={handleChange} className={inputStyle('omDescription') + " h-24 resize-none font-bold text-lg"} placeholder="Ex: MP Lógica CFTV..." />
              </div>
              <div>
-                <label className={labelStyle}>📈 Atividade Executada (Padrão)</label>
+                <label className={labelStyle('activityExecuted')}>📈 Atividade Executada (Padrão)</label>
                 <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[500px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos que compõem este modelo..." />
              </div>
           </div>
         ) : (
-          /* FORMULÁRIO COMPLETO NA SEQUÊNCIA SOLICITADA */
           <>
             {/* BLOCO 1: IDENTIFICAÇÃO BÁSICA */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.date || errors.equipment || errors.omNumber) ? 'border-red-500/30' : 'border-slate-800'}`}>
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">🗓️</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Identificação</h3>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className={labelStyle}>🗓️ Data</label>
+                    <label className={labelStyle('date')}>🗓️ Data</label>
                     <input type="date" name="date" value={formData.date} onChange={handleChange} className={inputStyle('date')} />
                   </div>
                   <div>
-                    <label className={labelStyle}>🚜 Equipamento</label>
+                    <label className={labelStyle('equipment')}>🚜 Equipamento</label>
                     <input name="equipment" value={formData.equipment} onChange={handleChange} className={inputStyle('equipment') + " uppercase"} placeholder="EX: BM1080KS01" />
                   </div>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className={labelStyle}>📂 N° OM</label>
+                    <label className={labelStyle('omNumber')}>📂 N° OM</label>
                     <input type="tel" inputMode="numeric" name="omNumber" value={formData.omNumber} onChange={handleChange} className={inputStyle('omNumber') + " mono text-lg"} placeholder="000000" />
                   </div>
                   <div>
-                    <label className={labelStyle}>🛠️ Tipo de Atividade</label>
+                    <label className={labelStyle('activityType')}>🛠️ Tipo de Atividade</label>
                     <select name="activityType" value={formData.activityType} onChange={handleChange} className={inputStyle('activityType')}>
                        <option value="preventiva">Preventiva</option>
                        <option value="corretiva">Corretiva</option>
@@ -265,18 +260,18 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 2: TEMPOS E DESVIOS */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.startTime || errors.endTime) ? 'border-red-500/30' : 'border-slate-800'}`}>
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-xl border border-amber-500/20">⏰</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Cronograma</h3>
                </div>
                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className={labelStyle}>⏰ Horário Inicial</label>
+                    <label className={labelStyle('startTime')}>⏰ Horário Inicial</label>
                     <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className={inputStyle('startTime') + " mono text-xl text-center"} />
                   </div>
                   <div>
-                    <label className={labelStyle}>⏰ Horário Final</label>
+                    <label className={labelStyle('endTime')}>⏰ Horário Final</label>
                     <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className={inputStyle('endTime') + " mono text-xl text-center"} />
                   </div>
                </div>
@@ -292,23 +287,23 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 3: DESCRIÇÃO E EXECUÇÃO */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.omDescription || errors.activityExecuted) ? 'border-red-500/30' : 'border-slate-800'}`}>
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">♻️</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Detalhamento</h3>
                </div>
                <div>
-                  <label className={labelStyle}>♻️ Descrição da OM</label>
+                  <label className={labelStyle('omDescription')}>♻️ Descrição da OM</label>
                   <textarea name="omDescription" value={formData.omDescription} onChange={handleChange} className={inputStyle('omDescription') + " h-24 resize-none font-bold text-lg"} placeholder="O que está sendo feito?" />
                </div>
                <div>
-                  <label className={labelStyle}>📈 Atividades executada</label>
+                  <label className={labelStyle('activityExecuted')}>📈 Atividades executada</label>
                   <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[400px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos realizados..." />
                </div>
             </div>
 
             {/* BLOCO 4: STATUS E OBSERVAÇÕES */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 transition-all shadow-xl space-y-6">
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-xl border border-purple-500/20">🎯</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Conclusão</h3>
@@ -327,34 +322,34 @@ ${upd.activityExecuted}
                   <textarea name="pendencyExplanation" value={formData.pendencyExplanation} onChange={handleChange} className={inputStyle('pendencyExplanation') + " h-24"} placeholder="Qual a pendência?" />
                )}
                <div>
-                  <label className={labelStyle}>⚠️ Obs</label>
+                  <label className={labelStyle('observations')}>⚠️ Obs</label>
                   <textarea name="observations" value={formData.observations} onChange={handleChange} className={inputStyle('observations') + " h-24 resize-none"} placeholder="Observações importantes..." />
                </div>
             </div>
 
             {/* BLOCO 5: EQUIPE E RESPONSÁVEIS */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ errors.technicians ? 'border-red-500/30' : 'border-slate-800'}`}>
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">👥</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Equipe</h3>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className={labelStyle}>📈 Equipe turno</label>
+                    <label className={labelStyle('teamShift')}>📈 Equipe turno</label>
                     <select name="teamShift" value={formData.teamShift} onChange={handleChange} className={inputStyle('teamShift')}>
                       {(['A','B','C','D'] as Shift[]).map(s => <option key={s} value={s}>Turno {s}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className={labelStyle}>🔖 Centro de Trabalho</label>
+                    <label className={labelStyle('workCenter')}>🔖 Centro de Trabalho</label>
                     <select name="workCenter" value={formData.workCenter} onChange={handleChange} className={inputStyle('workCenter')}>
                       {(['SC108HH','SC118HH','SC103HH','SC105HH','SC117HH'] as WorkCenter[]).map(w => <option key={w} value={w}>{w}</option>)}
                     </select>
                   </div>
                </div>
                <div className="space-y-4">
-                  <label className={labelStyle}>👥 Técnicos (Seleção Rápida)</label>
-                  <div className="flex flex-wrap gap-2.5 p-4 bg-slate-950 rounded-xl border border-slate-800 no-scrollbar overflow-x-auto">
+                  <label className={labelStyle('technicians')}>👥 Técnicos (Seleção Rápida)</label>
+                  <div className={`flex flex-wrap gap-2.5 p-4 bg-slate-950 rounded-xl border transition-all no-scrollbar overflow-x-auto ${errors.technicians ? 'border-red-500/50' : 'border-slate-800'}`}>
                     {SHIFT_TECHNICIANS[formData.teamShift].map(t => (
                       <button key={t} type="button" onClick={() => toggleTechnician(t)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all border-2 ${formData.technicians.toLowerCase().includes(t.toLowerCase()) ? 'bg-sky-500 border-sky-500 text-slate-950 shadow-md' : 'bg-slate-800 border-slate-800 text-slate-500'}`}>
                         {t}
@@ -366,7 +361,7 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 6: FOTOS */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 transition-all shadow-xl space-y-6">
                <div className={sectionHeader}>
                   <div className="w-10 h-10 bg-pink-500/10 rounded-lg flex items-center justify-center text-xl border border-pink-500/20">📸</div>
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Evidências Visuais</h3>
@@ -438,15 +433,6 @@ ${upd.activityExecuted}
                     className="max-w-full max-h-full object-contain cursor-crosshair" 
                   />
               </div>
-          </div>
-      )}
-
-      {validationMsg && (
-          <div className="fixed bottom-40 left-6 right-6 z-[70] animate-in slide-in-from-bottom-5 duration-400">
-             <div className="bg-red-600 text-white p-5 rounded-xl shadow-2xl flex items-center gap-5 border-2 border-red-500">
-                <span className="text-3xl">⚠️</span>
-                <p className="text-[12px] font-black uppercase tracking-widest leading-relaxed">{validationMsg}</p>
-             </div>
           </div>
       )}
     </div>
