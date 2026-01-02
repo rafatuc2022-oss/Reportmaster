@@ -49,6 +49,13 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
     if (finalValue) setErrors(prev => { const n = {...prev}; delete n[name]; return n; });
   };
 
+  const handleCaptionChange = (id: string, caption: string) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.map(p => p.id === id ? { ...p, caption } : p)
+    }));
+  };
+
   const toggleTechnician = (name: string) => {
     setFormData(prev => {
       const current = prev.technicians.split(',').map(t => t.trim()).filter(Boolean);
@@ -188,22 +195,23 @@ ${upd.activityExecuted}
     }
   };
 
-  const inputStyle = (f: string) => `w-full bg-slate-900 border-2 px-5 py-4 rounded-xl outline-none text-base font-bold transition-all shadow-md ${errors[f] ? 'border-red-500 bg-red-500/10 animate-pulse ring-2 ring-red-500/20' : 'border-slate-800 focus:border-sky-500 focus:bg-slate-950 text-white'}`;
-  const labelStyle = (f: string) => `text-[11px] font-black uppercase mb-2.5 block tracking-[0.2em] ml-1 transition-colors ${errors[f] ? 'text-red-500' : 'text-slate-500'}`;
-  const sectionHeader = "flex items-center gap-4 mb-8 pb-3 border-b border-white/10";
+  const inputStyle = (f: string) => `w-full bg-white dark:bg-slate-900 border-2 px-5 py-4 rounded-xl outline-none text-base font-bold transition-all shadow-sm ${errors[f] ? 'border-red-500 bg-red-500/10 animate-pulse ring-2 ring-red-500/20' : 'border-slate-200 dark:border-slate-800 focus:border-sky-500 focus:bg-white dark:focus:bg-slate-950 text-slate-900 dark:text-white'}`;
+  const labelStyle = (f: string) => `text-[11px] font-black uppercase mb-2.5 block tracking-[0.2em] ml-1 transition-colors ${errors[f] ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`;
+  const sectionHeader = "flex items-center gap-4 mb-8 pb-3 border-b border-slate-200 dark:border-white/10";
+  const cardStyle = (errKeyArr: string[]) => `bg-white dark:bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-lg space-y-6 ${errKeyArr.some(k => errors[k]) ? 'border-red-500/30' : 'border-slate-200 dark:border-slate-800'}`;
 
   return (
-    <div className="min-h-screen bg-[#020617] pb-48">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] pb-48 transition-colors duration-300">
       {/* HEADER FIXO */}
-      <div className="glass sticky top-0 z-[60] px-6 py-5 flex items-center gap-5 border-b border-white/10 shadow-xl">
-        <button onClick={onCancel} className="p-2.5 bg-slate-900 rounded-lg text-slate-400 border border-slate-700 active:scale-95 transition-all">
+      <div className="glass sticky top-0 z-[60] px-6 py-5 flex items-center gap-5 border-b border-slate-200 dark:border-white/10 shadow-xl">
+        <button onClick={onCancel} className="p-2.5 bg-white dark:bg-slate-900 rounded-lg text-slate-400 border border-slate-300 dark:border-slate-700 active:scale-95 transition-all">
            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <div>
-           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-500 block mb-1">
+           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-600 dark:text-sky-500 block mb-1">
              {formData.isTemplate ? 'Configuração de Modelo' : 'Relatório Técnico'}
            </span>
-           <span className="text-base font-black uppercase text-white tracking-tight">
+           <span className="text-base font-black uppercase text-slate-900 dark:text-white tracking-tight">
              {formData.isTemplate ? 'Definição de Atividade' : 'Formulário de Campo'}
            </span>
         </div>
@@ -212,10 +220,10 @@ ${upd.activityExecuted}
       <form onSubmit={handleSubmit} className="p-6 space-y-6 max-w-xl mx-auto">
         
         {formData.isTemplate ? (
-          <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${Object.keys(errors).length > 0 ? 'border-red-500/30' : 'border-slate-800'}`}>
+          <div className={cardStyle(['omDescription', 'activityExecuted'])}>
              <div className={sectionHeader}>
-                <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">📋</div>
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Configuração do Modelo</h3>
+                <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">📋</div>
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Configuração do Modelo</h3>
              </div>
              <div>
                 <label className={labelStyle('omDescription')}>♻️ Descrição da OM</label>
@@ -223,16 +231,16 @@ ${upd.activityExecuted}
              </div>
              <div>
                 <label className={labelStyle('activityExecuted')}>📈 Atividade Executada (Padrão)</label>
-                <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[500px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos que compõem este modelo..." />
+                <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[500px] resize-none font-medium leading-relaxed text-base bg-slate-50 dark:bg-slate-950/50"} placeholder="Descreva os passos que compõem este modelo..." />
              </div>
           </div>
         ) : (
           <>
             {/* BLOCO 1: IDENTIFICAÇÃO BÁSICA */}
-            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.date || errors.equipment || errors.omNumber) ? 'border-red-500/30' : 'border-slate-800'}`}>
+            <div className={cardStyle(['date', 'equipment', 'omNumber'])}>
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">🗓️</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Identificação</h3>
+                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20 text-sky-600 dark:text-sky-400">🗓️</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Identificação</h3>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -260,10 +268,10 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 2: TEMPOS E DESVIOS */}
-            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.startTime || errors.endTime) ? 'border-red-500/30' : 'border-slate-800'}`}>
+            <div className={cardStyle(['startTime', 'endTime'])}>
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-xl border border-amber-500/20">⏰</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Cronograma</h3>
+                  <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-xl border border-amber-500/20 text-amber-600 dark:text-amber-400">⏰</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Cronograma</h3>
                </div>
                <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -275,22 +283,22 @@ ${upd.activityExecuted}
                     <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className={inputStyle('endTime') + " mono text-xl text-center"} />
                   </div>
                </div>
-               <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${formData.iamoDeviation ? 'bg-red-500/5 border-red-500/20' : 'bg-slate-950/50 border-slate-800'}`}>
+               <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${formData.iamoDeviation ? 'bg-red-500/5 border-red-500/20' : 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'}`}>
                   <div className="flex items-center justify-between">
-                     <span className="text-[11px] font-black text-slate-100 uppercase tracking-widest block">🛑 Desvio IAMO</span>
+                     <span className="text-[11px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest block">🛑 Desvio IAMO</span>
                      <input type="checkbox" name="iamoDeviation" checked={formData.iamoDeviation} onChange={handleChange} className="w-6 h-6 rounded-md accent-red-500" />
                   </div>
                   {formData.iamoDeviation && (
-                     <textarea name="iamoExplanation" value={formData.iamoExplanation} onChange={handleChange} className="w-full mt-4 bg-slate-950 border border-red-500/30 rounded-lg p-4 outline-none text-base font-bold text-red-400 focus:border-red-500 transition-all shadow-inner" placeholder="Justifique o desvio..." />
+                     <textarea name="iamoExplanation" value={formData.iamoExplanation} onChange={handleChange} className="w-full mt-4 bg-white dark:bg-slate-950 border border-red-500/30 rounded-lg p-4 outline-none text-base font-bold text-red-600 dark:text-red-400 focus:border-red-500 transition-all shadow-inner" placeholder="Justifique o desvio..." />
                   )}
                </div>
             </div>
 
             {/* BLOCO 3: DESCRIÇÃO E EXECUÇÃO */}
-            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ (errors.omDescription || errors.activityExecuted) ? 'border-red-500/30' : 'border-slate-800'}`}>
+            <div className={cardStyle(['omDescription', 'activityExecuted'])}>
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">♻️</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Detalhamento</h3>
+                  <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">♻️</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Detalhamento</h3>
                </div>
                <div>
                   <label className={labelStyle('omDescription')}>♻️ Descrição da OM</label>
@@ -298,23 +306,23 @@ ${upd.activityExecuted}
                </div>
                <div>
                   <label className={labelStyle('activityExecuted')}>📈 Atividades executada</label>
-                  <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[400px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos realizados..." />
+                  <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[400px] resize-none font-medium leading-relaxed text-base bg-slate-50 dark:bg-slate-950/50"} placeholder="Descreva os passos realizados..." />
                </div>
             </div>
 
             {/* BLOCO 4: STATUS E OBSERVAÇÕES */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 transition-all shadow-xl space-y-6">
+            <div className="bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all shadow-lg space-y-6">
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-xl border border-purple-500/20">🎯</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Conclusão</h3>
+                  <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-xl border border-purple-500/20 text-purple-600 dark:text-purple-400">🎯</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Conclusão</h3>
                </div>
                <div className="grid grid-cols-2 gap-4">
-                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-800 bg-slate-950'}`}>
-                    <span className="text-[11px] font-black uppercase text-slate-200">🎯 Finalizada</span>
+                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950'}`}>
+                    <span className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-200">🎯 Finalizada</span>
                     <input type="checkbox" name="isOmFinished" checked={formData.isOmFinished} onChange={handleChange} className="w-6 h-6 accent-emerald-500" />
                   </label>
-                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}>
-                    <span className="text-[11px] font-black uppercase text-slate-200">🔔 Pendências</span>
+                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-500/10' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950'}`}>
+                    <span className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-200">🔔 Pendências</span>
                     <input type="checkbox" name="hasPendencies" checked={formData.hasPendencies} onChange={handleChange} className="w-6 h-6 accent-amber-500" />
                   </label>
                </div>
@@ -328,10 +336,10 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 5: EQUIPE E RESPONSÁVEIS */}
-            <div className={`bg-slate-900/40 p-6 rounded-2xl border transition-all shadow-xl space-y-6 ${ errors.technicians ? 'border-red-500/30' : 'border-slate-800'}`}>
+            <div className={cardStyle(['technicians'])}>
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">👥</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Equipe</h3>
+                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20 text-sky-600 dark:text-sky-400">👥</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Equipe</h3>
                </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -349,9 +357,9 @@ ${upd.activityExecuted}
                </div>
                <div className="space-y-4">
                   <label className={labelStyle('technicians')}>👥 Técnicos (Seleção Rápida)</label>
-                  <div className={`flex flex-wrap gap-2.5 p-4 bg-slate-950 rounded-xl border transition-all no-scrollbar overflow-x-auto ${errors.technicians ? 'border-red-500/50' : 'border-slate-800'}`}>
+                  <div className={`flex flex-wrap gap-2.5 p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border transition-all no-scrollbar overflow-x-auto ${errors.technicians ? 'border-red-500/50' : 'border-slate-200 dark:border-slate-800'}`}>
                     {SHIFT_TECHNICIANS[formData.teamShift].map(t => (
-                      <button key={t} type="button" onClick={() => toggleTechnician(t)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all border-2 ${formData.technicians.toLowerCase().includes(t.toLowerCase()) ? 'bg-sky-500 border-sky-500 text-slate-950 shadow-md' : 'bg-slate-800 border-slate-800 text-slate-500'}`}>
+                      <button key={t} type="button" onClick={() => toggleTechnician(t)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all border-2 ${formData.technicians.toLowerCase().includes(t.toLowerCase()) ? 'bg-sky-500 border-sky-500 text-slate-950 shadow-md' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-500'}`}>
                         {t}
                       </button>
                     ))}
@@ -361,26 +369,35 @@ ${upd.activityExecuted}
             </div>
 
             {/* BLOCO 6: FOTOS */}
-            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 transition-all shadow-xl space-y-6">
+            <div className="bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 transition-all shadow-lg space-y-6">
                <div className={sectionHeader}>
-                  <div className="w-10 h-10 bg-pink-500/10 rounded-lg flex items-center justify-center text-xl border border-pink-500/20">📸</div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Evidências Visuais</h3>
+                  <div className="w-10 h-10 bg-pink-500/10 rounded-lg flex items-center justify-center text-xl border border-pink-500/20 text-pink-600 dark:text-pink-400">📸</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">Evidências Visuais</h3>
                </div>
                <div className="grid grid-cols-2 gap-5">
                   {formData.photos.map(p => (
-                     <div key={p.id} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-700 shadow-lg bg-slate-950">
-                        <img src={p.url} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-4 transition-all duration-200">
-                           <button type="button" onClick={() => openEditor(p.id)} className="w-12 h-12 bg-sky-500 text-slate-950 rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✏️</button>
-                           <button type="button" onClick={() => setFormData(f => ({...f, photos: f.photos.filter(ph => ph.id !== p.id)}))} className="w-12 h-12 bg-red-600 text-white rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✕</button>
+                     <div key={p.id} className="flex flex-col gap-2">
+                        <div className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-lg bg-slate-100 dark:bg-slate-950">
+                           <img src={p.url} className="w-full h-full object-cover" />
+                           <div className="absolute inset-0 bg-slate-900/80 dark:bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-4 transition-all duration-200">
+                              <button type="button" onClick={() => openEditor(p.id)} className="w-12 h-12 bg-sky-500 text-slate-950 rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✏️</button>
+                              <button type="button" onClick={() => setFormData(f => ({...f, photos: f.photos.filter(ph => ph.id !== p.id)}))} className="w-12 h-12 bg-red-600 text-white rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✕</button>
+                           </div>
                         </div>
+                        <input 
+                          type="text" 
+                          value={p.caption} 
+                          onChange={(e) => handleCaptionChange(p.id, e.target.value)}
+                          placeholder="Legenda da foto..."
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-sky-500 transition-all"
+                        />
                      </div>
                   ))}
-                  <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-600 hover:text-sky-500 hover:border-sky-500/40 transition-all bg-slate-950/40">
+                  <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 hover:text-sky-600 dark:hover:text-sky-500 hover:border-sky-500/40 transition-all bg-slate-50 dark:bg-slate-950/40">
                      <span className="text-4xl mb-2">📷</span>
                      <span className="text-[10px] font-black uppercase tracking-widest">Câmera</span>
                   </button>
-                  <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-600 hover:text-sky-400 hover:border-sky-400/40 transition-all bg-slate-950/40">
+                  <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 hover:text-sky-600 dark:hover:text-sky-400 hover:border-sky-400/40 transition-all bg-slate-50 dark:bg-slate-950/40">
                      <span className="text-4xl mb-2">🖼️</span>
                      <span className="text-[10px] font-black uppercase tracking-widest">Galeria</span>
                   </button>
@@ -393,15 +410,15 @@ ${upd.activityExecuted}
 
         {/* BARRA DE AÇÕES FIXA */}
         <div className="fixed bottom-0 left-0 right-0 z-[100] p-6 pb-[env(safe-area-inset-bottom)]">
-           <div className="max-w-md mx-auto glass p-3 rounded-2xl border border-white/10 shadow-2xl">
+           <div className="max-w-md mx-auto glass p-3 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl">
               <div className="flex items-center gap-3">
-                 <button type="submit" className="flex-1 h-14 bg-sky-600 text-slate-950 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg">
+                 <button type="submit" className="flex-1 h-14 bg-sky-600 text-white dark:text-slate-950 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg">
                     {formData.isTemplate ? '💾 Salvar Modelo' : '💾 Salvar Relatório'}
                  </button>
                  
                  {!formData.isTemplate && (
                     <>
-                       <button type="button" onClick={() => handleExportAction('PDF')} className="w-14 h-14 bg-slate-900 text-white rounded-xl flex items-center justify-center border border-slate-700 active:scale-95 transition-all shadow-lg text-xl">📄</button>
+                       <button type="button" onClick={() => handleExportAction('PDF')} className="w-14 h-14 bg-slate-800 dark:bg-slate-900 text-white rounded-xl flex items-center justify-center border border-slate-600 dark:border-slate-700 active:scale-95 transition-all shadow-lg text-xl">📄</button>
                        <button type="button" onClick={() => handleExportAction('WHATSAPP')} className="w-14 h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-lg">
                           <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                        </button>

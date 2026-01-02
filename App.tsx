@@ -16,12 +16,30 @@ const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<Category>('FIXO');
   const [activeTab, setActiveTab] = useState('MEUS MODELOS');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setReports(storage.getReports());
   }, []);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      document.getElementById('theme-meta')?.setAttribute('content', '#020617');
+    } else {
+      root.classList.remove('dark');
+      document.getElementById('theme-meta')?.setAttribute('content', '#f8fafc');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const handleCreateNew = () => {
     setCurrentReport(null);
@@ -152,46 +170,53 @@ const App: React.FC = () => {
   }, [filteredReports]);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-200 transition-colors duration-300">
       
       {/* SIDEBAR MODERNA */}
       <div className={`fixed inset-0 z-[100] transition-all duration-500 ${isMenuOpen ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
-        <div className={`absolute top-0 left-0 h-full w-72 bg-[#0f172a] border-r border-slate-800 shadow-2xl transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-8 border-b border-slate-800 bg-slate-900/50">
+        <div className={`absolute top-0 left-0 h-full w-72 bg-white dark:bg-[#0f172a] border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-8 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50">
               <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center text-slate-950 font-black text-lg mb-3">RM</div>
-              <span className="font-black text-white uppercase tracking-tighter text-base">Menu Administrativo</span>
+              <span className="font-black text-slate-900 dark:text-white uppercase tracking-tighter text-base">Menu Administrativo</span>
           </div>
           <div className="p-6 space-y-4">
-             <button onClick={handleExportBackup} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest">
+             <button onClick={handleExportBackup} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-200/40 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest text-slate-700 dark:text-slate-300">
                 <span className="text-xl">💾</span> Backup do Sistema
              </button>
-             <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest">
+             <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-200/40 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest text-slate-700 dark:text-slate-300">
                 <span className="text-xl">📥</span> Restaurar Dados
              </button>
              <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
           </div>
-          <div className="mt-auto p-8 border-t border-slate-800 opacity-40">
-            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-center leading-relaxed">Automação Mina S11D<br/>Industrial v2.6</p>
+          <div className="mt-auto p-8 border-t border-slate-200 dark:border-slate-800 opacity-40">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-center leading-relaxed text-slate-500 dark:text-slate-400">Automação Mina S11D<br/>Industrial v2.6</p>
           </div>
         </div>
       </div>
 
       {/* HEADER COMPACTO E LIMPO */}
-      <header className="glass sticky top-0 z-[60] border-b border-white/10 px-6 py-4">
+      <header className="glass sticky top-0 z-[60] border-b border-slate-200 dark:border-white/10 px-6 py-4 transition-colors duration-300">
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-900 border border-slate-700 text-sky-400 active:scale-95 transition-all">
+          <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sky-500 dark:text-sky-400 active:scale-95 transition-all">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
+          
           <div className="text-center">
-              <h1 className="text-sm font-black text-white tracking-[0.2em] uppercase">ReportMaster</h1>
+              <h1 className="text-sm font-black text-slate-900 dark:text-white tracking-[0.2em] uppercase">ReportMaster</h1>
               <p className="text-[9px] font-bold text-sky-500 uppercase tracking-widest flex items-center justify-center gap-2 mt-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                 Status: Sincronizado
               </p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-[9px] font-black text-sky-500">
-            PRO
+
+          <div className="flex items-center gap-2">
+            <button onClick={toggleTheme} className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-amber-500 dark:text-sky-400 active:scale-95 transition-all shadow-sm">
+               {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[9px] font-black text-sky-500">
+              PRO
+            </div>
           </div>
         </div>
       </header>
@@ -206,24 +231,24 @@ const App: React.FC = () => {
                  placeholder="Pesquisar Ordem de Manutenção..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-full pl-12 pr-6 py-4 rounded-xl bg-slate-900 border-2 border-slate-800 text-base font-bold text-white outline-none focus:border-sky-500 transition-all placeholder:text-slate-600 shadow-xl"
+                 className="w-full pl-12 pr-6 py-4 rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-base font-bold text-slate-900 dark:text-white outline-none focus:border-sky-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-xl dark:shadow-2xl"
                />
-               <svg className="w-5 h-5 absolute left-4 top-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+               <svg className="w-5 h-5 absolute left-4 top-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
 
             {/* SELETOR DE CATEGORIA */}
-            <div className="flex p-1 bg-slate-900 rounded-xl border border-slate-800">
-               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'FIXO' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Ativos Fixos</button>
-               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'MÓVEL' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Equip. Móveis</button>
+            <div className="flex p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'FIXO' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-sky-500'}`}>Ativos Fixos</button>
+               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'MÓVEL' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-sky-500'}`}>Equip. Móveis</button>
             </div>
 
             {/* TABS DE NAVEGAÇÃO */}
-            <div className="flex gap-6 border-b border-slate-800 px-2 overflow-x-auto no-scrollbar">
+            <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto no-scrollbar">
                {(['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA']).map(tab => (
                  <button 
                   key={tab}
                   onClick={() => setActiveTab(tab)} 
-                  className={`pb-4 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === tab ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-500'}`}
+                  className={`pb-4 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === tab ? 'border-sky-500 text-sky-500 dark:text-sky-400' : 'border-transparent text-slate-400 dark:text-slate-500'}`}
                  >
                    {tab}
                  </button>
@@ -239,10 +264,10 @@ const App: React.FC = () => {
                 )}
                 
                 {activeTab === 'RELATÓRIOS' && filteredReports.length > 0 && (
-                  <div className="bg-slate-900/40 p-5 rounded-xl border border-slate-800 flex items-center justify-between shadow-lg">
+                  <div className="bg-white dark:bg-slate-900/40 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-lg">
                     <div>
                       <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Horas Operacionais</h3>
-                      <p className="mono text-2xl font-black text-sky-400">{totalExecutionTime.hours}h {totalExecutionTime.minutes}m</p>
+                      <p className="mono text-2xl font-black text-sky-500 dark:text-sky-400">{totalExecutionTime.hours}h {totalExecutionTime.minutes}m</p>
                     </div>
                     <div className="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-2xl border border-sky-500/20">⏱️</div>
                   </div>
