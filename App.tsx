@@ -79,15 +79,13 @@ const App: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Deseja excluir este item permanentemente?')) {
+    if (window.confirm('Excluir este registro permanentemente?')) {
       storage.deleteReport(id);
       setReports(storage.getReports());
     }
   };
 
-  const handlePrint = (report: Report) => {
-    generatePDF(report);
-  };
+  const handlePrint = (report: Report) => generatePDF(report);
 
   const handleExportBackup = () => {
     const data = storage.getReports();
@@ -112,21 +110,15 @@ const App: React.FC = () => {
         const content = e.target?.result as string;
         const importedData = JSON.parse(content);
         if (Array.isArray(importedData)) {
-          if (window.confirm('Atenção: Isso substituirá todos os seus dados atuais pelos dados do backup. Deseja continuar?')) {
+          if (window.confirm('Isso substituirá todos os dados atuais. Continuar?')) {
             storage.saveReports(importedData);
             setReports(storage.getReports());
-            alert('Backup restaurado com sucesso!');
           }
-        } else {
-          alert('Arquivo de backup inválido.');
         }
-      } catch (err) {
-        alert('Erro ao processar o arquivo de backup.');
-      }
+      } catch (err) { alert('Erro no arquivo.'); }
     };
     reader.readAsText(file);
     setIsMenuOpen(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const getDurationMinutes = (start: string, end: string) => {
@@ -160,82 +152,99 @@ const App: React.FC = () => {
   }, [filteredReports]);
 
   return (
-    <div className="min-h-screen bg-[#0b1120] pb-10 relative overflow-x-hidden text-slate-200">
+    <div className="min-h-screen bg-[#020617] text-slate-200">
       
-      {/* SIDE MENU */}
-      <div className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}></div>
-        <div className={`absolute top-0 left-0 h-full w-72 bg-[#161c2d] border-r border-slate-800 shadow-2xl transition-transform duration-300 flex flex-col ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-sm">RM</div>
-              <span className="font-black text-slate-100 uppercase tracking-tight">Menu</span>
-            </div>
-            <button onClick={() => setIsMenuOpen(false)} className="text-slate-500 hover:text-white">✕</button>
+      {/* SIDEBAR MODERNA */}
+      <div className={`fixed inset-0 z-[100] transition-all duration-500 ${isMenuOpen ? 'visible' : 'invisible'}`}>
+        <div className={`absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMenuOpen(false)}></div>
+        <div className={`absolute top-0 left-0 h-full w-72 bg-[#0f172a] border-r border-slate-800 shadow-2xl transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-8 border-b border-slate-800 bg-slate-900/50">
+              <div className="w-10 h-10 bg-sky-500 rounded-lg flex items-center justify-center text-slate-950 font-black text-lg mb-3">RM</div>
+              <span className="font-black text-white uppercase tracking-tighter text-base">Menu Administrativo</span>
           </div>
-          <div className="flex-1 p-4 space-y-2">
-             <button onClick={handleExportBackup} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-slate-300 font-bold text-sm transition-colors"><span>💾</span> Backup (Exportar)</button>
-             <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-slate-300 font-bold text-sm transition-colors"><span>📥</span> Restaurar (Importar)</button>
+          <div className="p-6 space-y-4">
+             <button onClick={handleExportBackup} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest">
+                <span className="text-xl">💾</span> Backup do Sistema
+             </button>
+             <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700 text-xs font-black transition-all text-left uppercase tracking-widest">
+                <span className="text-xl">📥</span> Restaurar Dados
+             </button>
              <input ref={fileInputRef} type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
+          </div>
+          <div className="mt-auto p-8 border-t border-slate-800 opacity-40">
+            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-center leading-relaxed">Automação Mina S11D<br/>Industrial v2.6</p>
           </div>
         </div>
       </div>
 
-      {/* HEADER COMPACTO */}
-      <header className="bg-[#0b1120] p-4 sticky top-0 z-50 border-b border-slate-800">
+      {/* HEADER COMPACTO E LIMPO */}
+      <header className="glass sticky top-0 z-[60] border-b border-white/10 px-6 py-4">
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-            </button>
-            <div>
-                <h1 className="text-lg font-black text-white tracking-tight leading-none">ReportMaster</h1>
-                <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest mt-0.5">S11D - SERRA SUL</p>
-            </div>
+          <button onClick={() => setIsMenuOpen(true)} className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-900 border border-slate-700 text-sky-400 active:scale-95 transition-all">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <div className="text-center">
+              <h1 className="text-sm font-black text-white tracking-[0.2em] uppercase">ReportMaster</h1>
+              <p className="text-[9px] font-bold text-sky-500 uppercase tracking-widest flex items-center justify-center gap-2 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                Status: Sincronizado
+              </p>
+          </div>
+          <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-[9px] font-black text-sky-500">
+            PRO
           </div>
         </div>
       </header>
 
-      <main className={`max-w-xl mx-auto space-y-5 ${view === 'LIST' ? 'p-4' : 'p-0'}`}>
+      <main className={`max-w-xl mx-auto space-y-6 ${view === 'LIST' ? 'p-5' : 'p-0'}`}>
         {view === 'LIST' ? (
           <>
+            {/* BUSCA COM DESIGN ESTRUTURADO */}
             <div className="relative">
                <input 
                  type="text" 
-                 placeholder="Buscar modelo..."
+                 placeholder="Pesquisar Ordem de Manutenção..."
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#161c2d] border border-slate-800 text-sm font-medium text-slate-200 outline-none focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-500"
+                 className="w-full pl-12 pr-6 py-4 rounded-xl bg-slate-900 border-2 border-slate-800 text-base font-bold text-white outline-none focus:border-sky-500 transition-all placeholder:text-slate-600 shadow-xl"
                />
-               <svg className="w-5 h-5 absolute left-3 top-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+               <svg className="w-5 h-5 absolute left-4 top-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
 
-            {/* CATEGORY SELECTOR */}
-            <div className="flex bg-[#161c2d] p-1 rounded-xl border border-slate-800">
-               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${activeCategory === 'FIXO' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}><span>🔧</span> FIXOS</button>
-               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-2.5 rounded-lg font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${activeCategory === 'MÓVEL' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'}`}><span>🚛</span> MÓVEIS</button>
+            {/* SELETOR DE CATEGORIA */}
+            <div className="flex p-1 bg-slate-900 rounded-xl border border-slate-800">
+               <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'FIXO' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Ativos Fixos</button>
+               <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'MÓVEL' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-500 hover:text-slate-300'}`}>Equip. Móveis</button>
             </div>
 
-            {/* TABS COMPACTAS */}
-            <div className="flex justify-around border-b border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500">
-               <button onClick={() => setActiveTab('MEUS MODELOS')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'MEUS MODELOS' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Meus Modelos</button>
-               <button onClick={() => setActiveTab('RELATÓRIOS')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'RELATÓRIOS' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Relatórios</button>
-               <button onClick={() => setActiveTab('BOA JORNADA')} className={`pb-3 px-2 border-b-2 transition-all ${activeTab === 'BOA JORNADA' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>Início de Turno</button>
+            {/* TABS DE NAVEGAÇÃO */}
+            <div className="flex gap-6 border-b border-slate-800 px-2 overflow-x-auto no-scrollbar">
+               {(['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA']).map(tab => (
+                 <button 
+                  key={tab}
+                  onClick={() => setActiveTab(tab)} 
+                  className={`pb-4 text-[10px] font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === tab ? 'border-sky-500 text-sky-400' : 'border-transparent text-slate-500'}`}
+                 >
+                   {tab}
+                 </button>
+               ))}
             </div>
 
             {activeTab === 'BOA JORNADA' ? <ShiftStart /> : (
-              <div className="space-y-3">
+              <div className="space-y-4 animate-in fade-in duration-500">
                 {activeTab === 'MEUS MODELOS' && (
-                  <button onClick={handleCreateNew} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-500 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-widest shadow-lg active:scale-95"><span>+</span> Novo Modelo {activeCategory}</button>
+                  <button onClick={handleCreateNew} className="w-full bg-sky-600 p-5 rounded-xl font-black text-slate-950 hover:bg-sky-500 transition-all active:scale-[0.98] shadow-lg flex items-center justify-center gap-3 uppercase tracking-widest text-xs">
+                    <span className="text-xl">✚</span> Novo Modelo: {activeCategory}
+                  </button>
                 )}
                 
                 {activeTab === 'RELATÓRIOS' && filteredReports.length > 0 && (
-                  <div className="bg-[#161c2d] p-4 rounded-xl border border-slate-800 flex items-center justify-between shadow-lg">
+                  <div className="bg-slate-900/40 p-5 rounded-xl border border-slate-800 flex items-center justify-between shadow-lg">
                     <div>
-                      <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Tempo Total Turno</h3>
-                      <p className="text-xl font-black text-blue-500">{totalExecutionTime.hours}h {totalExecutionTime.minutes}m</p>
+                      <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Horas Operacionais</h3>
+                      <p className="mono text-2xl font-black text-sky-400">{totalExecutionTime.hours}h {totalExecutionTime.minutes}m</p>
                     </div>
-                    <span className="text-2xl opacity-50">⏱️</span>
+                    <div className="w-12 h-12 bg-sky-500/10 rounded-lg flex items-center justify-center text-2xl border border-sky-500/20">⏱️</div>
                   </div>
                 )}
 
@@ -251,7 +260,13 @@ const App: React.FC = () => {
             )}
           </>
         ) : (
-          <ReportForm initialData={currentReport} onSave={handleSave} onCancel={() => setView('LIST')} isEdit={view === 'EDIT'} onMarkExported={handleMarkAsExported} />
+          <ReportForm 
+            initialData={currentReport} 
+            onSave={handleSave} 
+            onCancel={() => setView('LIST')} 
+            isEdit={view === 'EDIT'} 
+            onMarkExported={handleMarkAsExported} 
+          />
         )}
       </main>
     </div>

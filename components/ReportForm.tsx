@@ -24,133 +24,62 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
   const [formData, setFormData] = useState<Report>(() => {
     let processedPhotos: PhotoItem[] = [];
     if (initialData?.photos) {
-        processedPhotos = initialData.photos.map(p => {
-            if (typeof p === 'string') {
-                return { id: crypto.randomUUID(), url: p, caption: '' };
-            }
-            return p;
-        });
+        processedPhotos = initialData.photos.map(p => (typeof p === 'string' ? { id: crypto.randomUUID(), url: p, caption: '' } : p));
     }
-
     const data = initialData ? { ...initialData, photos: processedPhotos } : {
-      id: crypto.randomUUID(),
-      createdAt: Date.now(),
-      category: 'FIXO' as Category,
-      isTemplate: true,
-      omDescription: '',
-      activityExecuted: '',
-      date: getTodayStr(),
-      omNumber: '',
-      equipment: '',
-      location: '', 
-      activityType: 'preventiva' as ActivityType,
-      startTime: '',
-      endTime: '',
-      iamoDeviation: false,
-      iamoExplanation: '',
-      isOmFinished: false,
-      hasPendencies: false,
-      pendencyExplanation: '',
-      observations: '',
-      teamShift: 'A' as Shift,
-      workCenter: 'SC108HH' as WorkCenter,
-      technicians: '',
-      photos: []
+      id: crypto.randomUUID(), createdAt: Date.now(), category: 'FIXO' as Category, isTemplate: true, omDescription: '', activityExecuted: '', date: getTodayStr(), omNumber: '', equipment: '', location: '', activityType: 'preventiva' as ActivityType, startTime: '', endTime: '', iamoDeviation: false, iamoExplanation: '', isOmFinished: false, hasPendencies: false, pendencyExplanation: '', observations: '', teamShift: 'A' as Shift, workCenter: 'SC108HH' as WorkCenter, technicians: '', photos: []
     };
-
-    if (isEdit && data.isTemplate) {
-      data.date = getTodayStr();
-    }
+    if (isEdit && data.isTemplate) data.date = getTodayStr();
     return data;
   });
 
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
-  
   const [editingPhotoId, setEditingPhotoId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-
     let finalValue = value;
-
-    if (name === 'omNumber') {
-      finalValue = value.replace(/\D/g, ''); 
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : finalValue
-    }));
-
-    if (finalValue) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-      if (validationMsg) setValidationMsg(null);
-    }
+    if (name === 'omNumber') finalValue = value.replace(/\D/g, ''); 
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : finalValue }));
+    if (finalValue) setErrors(prev => { const n = {...prev}; delete n[name]; return n; });
+    if (validationMsg) setValidationMsg(null);
   };
 
   const toggleTechnician = (name: string) => {
     setFormData(prev => {
-      const currentTechs = prev.technicians.split(',').map(t => t.trim()).filter(t => t !== '');
-      let newTechs;
-      if (currentTechs.includes(name)) {
-        newTechs = currentTechs.filter(t => t !== name);
-      } else {
-        newTechs = [...currentTechs, name];
-      }
-      return { ...prev, technicians: newTechs.join(', ') };
+      const current = prev.technicians.split(',').map(t => t.trim()).filter(Boolean);
+      const next = current.includes(name) ? current.filter(t => t !== name) : [...current, name];
+      return { ...prev, technicians: next.join(', ') };
     });
   };
 
   const validate = (forceStrict = false) => {
-    const newErrors: Record<string, boolean> = {};
-    const missingFields: string[] = [];
-
-    const checkField = (field: keyof Report, label: string) => {
-        if (!formData[field]) {
-            newErrors[field as string] = true;
-            missingFields.push(label);
-        }
-    };
-
-    checkField('omDescription', 'Descrição da OM');
+    const nE: Record<string, boolean> = {};
+    const check = (f: keyof Report) => { if (!formData[f]) nE[f as string] = true; };
     
-    if (forceStrict || (isEdit && !formData.isTemplate)) {
-      checkField('omNumber', 'N° OM');
-      checkField('startTime', 'Início');
-      checkField('endTime', 'Fim');
-      checkField('activityExecuted', 'Atividades');
-      checkField('technicians', 'Técnicos');
-      checkField('date', 'Data');
+    check('omDescription');
+    check('activityExecuted');
+
+    if (!formData.isTemplate) {
+      ['omNumber', 'startTime', 'endTime', 'technicians', 'date', 'equipment'].forEach(f => check(f as keyof Report));
     }
 
-    setErrors(newErrors);
-
-    if (missingFields.length > 0) {
-        setValidationMsg(`Falta preencher: ${missingFields.join(', ')}`);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
+    setErrors(nE);
+    if (Object.keys(nE).length > 0) {
+      setValidationMsg("Preencha os campos destacados para continuar.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
     }
-
-    setValidationMsg(null);
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate(false)) return;
-    onSave(formData);
-  };
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); if (validate(false)) onSave(formData); };
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -165,507 +94,361 @@ const ReportForm: React.FC<Props> = ({ initialData, onSave, onCancel, isEdit, on
           const scaleSize = MAX_WIDTH / img.width;
           canvas.width = MAX_WIDTH;
           canvas.height = img.height * scaleSize;
-          
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-          
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          resolve(compressedDataUrl);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
         };
       };
     });
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    
-    const processedPhotos: PhotoItem[] = [];
+    const files = e.target.files; if (!files) return;
+    const newPhotos: PhotoItem[] = [];
     for (let i = 0; i < files.length; i++) {
-      const compressed = await compressImage(files[i]);
-      processedPhotos.push({
-          id: crypto.randomUUID(),
-          url: compressed,
-          caption: ''
-      });
+        const compressed = await compressImage(files[i]);
+        newPhotos.push({ id: crypto.randomUUID(), url: compressed, caption: '' });
     }
-    
-    setFormData(prev => ({ ...prev, photos: [...prev.photos, ...processedPhotos] }));
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-    if (galleryInputRef.current) galleryInputRef.current.value = '';
+    setFormData(prev => ({ ...prev, photos: [...prev.photos, ...newPhotos] }));
   };
 
-  const updateCaption = (id: string, text: string) => {
-      setFormData(prev => ({
-          ...prev,
-          photos: prev.photos.map(p => p.id === id ? { ...p, caption: text } : p)
-      }));
-  };
-
-  const openEditor = (id: string) => {
-      setEditingPhotoId(id);
-  };
-
-  const closeEditor = () => {
-      setEditingPhotoId(null);
-      setIsDrawing(false);
-  };
+  const openEditor = (id: string) => setEditingPhotoId(id);
 
   const saveEditedImage = () => {
       if (canvasRef.current && editingPhotoId) {
           const newUrl = canvasRef.current.toDataURL('image/jpeg', 0.8);
-          setFormData(prev => ({
-              ...prev,
-              photos: prev.photos.map(p => p.id === editingPhotoId ? { ...p, url: newUrl } : p)
-          }));
-          closeEditor();
+          setFormData(prev => ({ ...prev, photos: prev.photos.map(p => p.id === editingPhotoId ? { ...p, url: newUrl } : p) }));
+          setEditingPhotoId(null);
+          setIsDrawing(false);
       }
   };
 
-  // Efeito para carregar a imagem no canvas quando o ID de edição mudar
   useEffect(() => {
-    if (editingPhotoId) {
-      // Pequeno timeout para garantir que o canvas já foi montado no DOM
-      const timer = setTimeout(() => {
-        const photo = formData.photos.find(p => p.id === editingPhotoId);
-        if (photo && canvasRef.current) {
-          const canvas = canvasRef.current;
-          const ctx = canvas.getContext('2d');
-          const img = new Image();
-          img.src = photo.url;
-          img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            if (ctx) {
-              ctx.drawImage(img, 0, 0);
-              ctx.strokeStyle = "red";
-              ctx.lineWidth = 8;
-              ctx.lineCap = "round";
-              ctx.lineJoin = "round";
-            }
-          };
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+    if (editingPhotoId && canvasRef.current) {
+      const photo = formData.photos.find(p => p.id === editingPhotoId);
+      if (photo) {
+        const ctx = canvasRef.current.getContext('2d');
+        const img = new Image();
+        img.src = photo.url;
+        img.onload = () => {
+          if (canvasRef.current && ctx) {
+            canvasRef.current.width = img.width;
+            canvasRef.current.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+          }
+        };
+      }
     }
   }, [editingPhotoId, formData.photos]);
 
-  const getCoordinates = (e: any) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    
-    let clientX, clientY;
-    if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
-    };
-  };
-
-  const startDrawing = (e: any) => {
-    if (e.type === 'touchstart') e.preventDefault();
-    setIsDrawing(true);
-    const { x, y } = getCoordinates(e);
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) {
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
-  };
-
-  const draw = (e: any) => {
-    if (!isDrawing) return;
-    if (e.type === 'touchmove') e.preventDefault();
-    const { x, y } = getCoordinates(e);
-    const ctx = canvasRef.current?.getContext('2d');
-    if (ctx) {
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
   const handleExportAction = (type: 'PDF' | 'WHATSAPP') => {
     if (!validate(true)) return;
-    const updatedForm = { ...formData, isExported: true };
-    setFormData(updatedForm);
-    onMarkExported(updatedForm);
+    const upd = { ...formData, isExported: true };
+    setFormData(upd); onMarkExported(upd);
+    if (type === 'PDF') generatePDF(upd);
+    else {
+        // Modelo exato solicitado pelo usuário com espaçamento rigoroso
+        const text = `*RELATÓRIO DE EXECUÇÃO*
+*AUTOMAÇÃO MINA SERRA SUL*
+   
+🗓️ Data: ${upd.date.split('-').reverse().join('/')}
 
-    if (type === 'PDF') {
-        generatePDF(updatedForm);
-    } else {
-        handleWhatsappShareLogic(updatedForm);
+🚜 Equipamento: ${upd.equipment || 'N/A'}
+   
+📂 N° OM: ${upd.omNumber}
+   
+🛠️ Tipo de Atividade: ${upd.activityType === 'preventiva' ? 'Preventiva' : 'Corretiva'}
+   
+⏰ Horário Inicial: ${upd.startTime}
+⏰ Horario final: ${upd.endTime}   
+🛑 Desvio IAMO: ${upd.iamoDeviation ? `SIM (${upd.iamoExplanation})` : 'NÃO'}
+   
+♻️ Descrição da OM: ${upd.omDescription}
+   
+📈 Atividades executada:
+${upd.activityExecuted}
+   
+ 
+ 
+
+🎯 OM finalizada: ${upd.isOmFinished ? 'Finalizada' : 'Em Aberto'}
+
+🔔 Pendências: ${upd.hasPendencies ? `Sim (${upd.pendencyExplanation})` : 'Não'}
+ 
+⚠️ Obs: ${upd.observations || 'Nenhum'}
+   
+📈 Equipe turno: Turno ${upd.teamShift}
+   
+🔖 Centro de Trabalho: ${upd.workCenter}
+   
+👥 Técnicos: ${upd.technicians}`;
+
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
   };
 
-  const handleWhatsappShareLogic = (data: Report) => {
-    const text = 
-`RELATÓRIO DE EXECUÇÃO
-AUTOMAÇÃO MINA SERRA SUL
-
-🗓️ Data: ${data.date.split('-').reverse().join('/')}
-🚜 Equipamento: ${data.equipment || 'N/A'}
-📍 Local: ${data.location || 'N/A'}
-
-📂 N° OM: ${data.omNumber || 'N/A'}
-
-🛠️ Tipo de Atividade: ${data.activityType === 'preventiva' ? 'Preventiva' : 'Corretiva'}
-
-⏰ Horário Inicial: ${data.startTime}
-⏰ Horario final: ${data.endTime}
-🛑 Desvio IAMO: ${data.iamoDeviation ? `SIM (${data.iamoExplanation})` : 'NÃO'}
-
-♻️ Descrição da OM:
-${data.omDescription}
-
-📈 Atividades executada:
-${data.activityExecuted}
-
-🎯 OM finalizada: ${data.isOmFinished ? 'Finalizada' : 'Aberta'}
-🔔 Pendências: ${data.hasPendencies ? `Sim (${data.pendencyExplanation})` : 'Não'}
-
-⚠️ Obs: ${data.observations || 'N/A'}
-
-📈 Equipe turno: ${data.teamShift}
-
-🔖 Centro de Trabalho: ${data.workCenter}
-
-👥 Técnicos: ${data.technicians}`;
-
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  };
-
-  const getFieldStyle = (fieldName: string) => {
-    const base = "w-full px-4 py-3 rounded-xl border-2 outline-none font-semibold text-sm transition-all text-slate-700 shadow-sm ";
-    const state = errors[fieldName] 
-      ? "border-red-400 bg-red-50 focus:border-red-500 animate-pulse" 
-      : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:shadow-blue-100/50";
-    return base + state;
-  };
-
-  const labelStyle = "text-[10px] font-black uppercase text-slate-500 mb-1.5 flex items-center gap-1 tracking-wider";
-
-  const currentShiftTechs = SHIFT_TECHNICIANS[formData.teamShift] || [];
+  const inputStyle = (f: string) => `w-full bg-slate-900 border-2 px-5 py-4 rounded-xl outline-none text-base font-bold transition-all ${errors[f] ? 'border-red-500 bg-red-500/5 animate-pulse' : 'border-slate-800 focus:border-sky-500 focus:bg-slate-950 text-white shadow-md'}`;
+  const labelStyle = "text-[11px] font-black uppercase text-slate-500 mb-2.5 block tracking-[0.2em] ml-1";
+  const sectionHeader = "flex items-center gap-4 mb-8 pb-3 border-b border-white/10";
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-44">
-      {/* 1. HEADER */}
-      <div className="bg-white border-b border-slate-200 px-5 py-4 sticky top-0 z-50 flex items-center gap-4 shadow-xl">
-        <button type="button" onClick={onCancel} className="p-2 -ml-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-          </svg>
+    <div className="min-h-screen bg-[#020617] pb-48">
+      {/* HEADER FIXO */}
+      <div className="glass sticky top-0 z-[60] px-6 py-5 flex items-center gap-5 border-b border-white/10 shadow-xl">
+        <button onClick={onCancel} className="p-2.5 bg-slate-900 rounded-lg text-slate-400 border border-slate-700 active:scale-95 transition-all">
+           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <div>
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none mb-1">Relatório de Execução</p>
-          <h2 className="text-sm font-black text-slate-800 uppercase leading-tight tracking-tight">Automação Mina Serra Sul</h2>
+           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-500 block mb-1">
+             {formData.isTemplate ? 'Configuração de Modelo' : 'Relatório Técnico'}
+           </span>
+           <span className="text-base font-black uppercase text-white tracking-tight">
+             {formData.isTemplate ? 'Definição de Atividade' : 'Formulário de Campo'}
+           </span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-0 sm:p-5 space-y-6 w-full max-w-full">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6 max-w-xl mx-auto">
         
-        {/* 2. DADOS INICIAIS */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-            <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">🚜</span>
-            <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Dados Iniciais</h3>
+        {/* CONDIÇÃO: SE FOR APENAS MODELO, MOSTRA APENAS OS CAMPOS DE DEFINIÇÃO */}
+        {formData.isTemplate ? (
+          <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+             <div className={sectionHeader}>
+                <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">📋</div>
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Configuração do Modelo</h3>
+             </div>
+             <div>
+                <label className={labelStyle}>♻️ Descrição da OM</label>
+                <textarea name="omDescription" value={formData.omDescription} onChange={handleChange} className={inputStyle('omDescription') + " h-24 resize-none font-bold text-lg"} placeholder="Ex: MP Lógica CFTV..." />
+             </div>
+             <div>
+                <label className={labelStyle}>📈 Atividade Executada (Padrão)</label>
+                <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[500px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos que compõem este modelo..." />
+             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className={labelStyle}>🗓️ Data <span className="text-red-500">*</span></label>
-              <input type="date" name="date" value={formData.date} onChange={handleChange} className={getFieldStyle('date')} />
-            </div>
-            <div>
-              <label className={labelStyle}>🚜 Equipamento</label>
-              <input name="equipment" value={formData.equipment} onChange={handleChange} placeholder="EX: BM1080KS01" className={getFieldStyle('equipment') + " uppercase tracking-wide"} />
-            </div>
-            <div>
-              <label className={labelStyle}>📍 Localização</label>
-              <input name="location" value={formData.location} onChange={handleChange} placeholder="EX: OVERLAND / 5ª LINHA" className={getFieldStyle('location') + " uppercase tracking-wide"} />
-            </div>
-          </div>
-        </div>
-
-        {/* 3. N° OM e TIPO */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-            <span className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg text-lg">📂</span>
-            <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Ordem de Manutenção</h3>
-          </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className={labelStyle}>📂 N° OM <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">#</span>
-                <input type="tel" inputMode="numeric" pattern="[0-9]*" name="omNumber" value={formData.omNumber} onChange={handleChange} className={getFieldStyle('omNumber') + " pl-8 font-bold text-lg"} placeholder="000000" />
-              </div>
-            </div>
-            <div>
-              <label className={labelStyle}>🛠️ Tipo de Atividade</label>
-              <div className="relative">
-                 <select name="activityType" value={formData.activityType} onChange={handleChange} className={getFieldStyle('activityType') + " appearance-none"}>
-                  <option value="preventiva">🛡️ PREVENTIVA</option>
-                  <option value="corretiva">🔧 CORRETIVA</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 5. HORÁRIOS / IAMO */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-             <span className="bg-orange-100 text-orange-600 p-1.5 rounded-lg text-lg">⏰</span>
-             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Cronograma</h3>
-           </div>
-           <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelStyle}>Início <span className="text-red-500">*</span></label>
-                <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className={getFieldStyle('startTime') + " text-center tracking-widest font-bold"} />
-              </div>
-              <div>
-                <label className={labelStyle}>Final <span className="text-red-500">*</span></label>
-                <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className={getFieldStyle('endTime') + " text-center tracking-widest font-bold"} />
-              </div>
-           </div>
-           <div className="pt-2">
-              <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${formData.iamoDeviation ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-100'}`}>
-                <div className="flex items-center justify-between mb-3">
-                   <label className="text-[11px] font-black uppercase text-slate-600 flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${formData.iamoDeviation ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
-                      Desvio IAMO?
-                   </label>
-                   <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                      <input type="checkbox" name="iamoDeviation" checked={formData.iamoDeviation} onChange={handleChange} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out checked:right-0 checked:border-red-500 border-slate-300 right-5" />
-                      <label className={`toggle-label block overflow-hidden h-5 rounded-full cursor-pointer ${formData.iamoDeviation ? 'bg-red-200' : 'bg-slate-200'}`}></label>
-                   </div>
-                </div>
-                {formData.iamoDeviation && (
-                  <textarea name="iamoExplanation" value={formData.iamoExplanation} onChange={handleChange} className="w-full bg-white rounded-xl p-3 border border-red-200 text-sm text-slate-700 placeholder:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/20" placeholder="Descreva o motivo do desvio..." rows={2} />
-                )}
-              </div>
-           </div>
-        </div>
-
-        {/* 6. EXECUÇÃO */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-             <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-lg">📝</span>
-             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Execução</h3>
-           </div>
-          <div>
-            <label className={labelStyle}>♻️ Descrição da OM <span className="text-red-500">*</span></label>
-            <textarea name="omDescription" value={formData.omDescription} onChange={handleChange} className={getFieldStyle('omDescription') + " min-h-[60px] resize-none leading-relaxed font-bold"} placeholder="Ex: MP LOGICA CFTV" />
-          </div>
-          <div>
-            <label className={labelStyle}>📈 Atividades Executadas <span className="text-red-500">*</span></label>
-            <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={getFieldStyle('activityExecuted') + " min-h-[250px] bg-amber-50/50 border-amber-100 focus:bg-white resize-none font-medium leading-relaxed text-sm"} placeholder="✅ Detalhe as ações executadas..." />
-          </div>
-        </div>
-
-        {/* 8. CONCLUSÃO */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-             <span className="bg-purple-100 text-purple-600 p-1.5 rounded-lg text-lg">🏁</span>
-             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Conclusão</h3>
-           </div>
-           <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                <span className="text-[10px] font-black uppercase text-slate-600 leading-none">OM Finalizada</span>
-                <input type="checkbox" name="isOmFinished" checked={formData.isOmFinished} onChange={handleChange} className="w-5 h-5 accent-emerald-500" />
-              </label>
-              <label className={`flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
-                <span className="text-[10px] font-black uppercase text-slate-600 leading-none">Com Pendência</span>
-                <input type="checkbox" name="hasPendencies" checked={formData.hasPendencies} onChange={handleChange} className="w-5 h-5 accent-amber-500" />
-              </label>
-           </div>
-           {formData.hasPendencies && (
-            <div className="animate-in slide-in-from-top-2 duration-300">
-              <label className={labelStyle}>🔔 Detalhe da Pendência</label>
-              <textarea name="pendencyExplanation" value={formData.pendencyExplanation} onChange={handleChange} className={getFieldStyle('pendencyExplanation') + " min-h-[80px] border-amber-200 focus:border-amber-400"} placeholder="Descreva o que ficou pendente..." />
-            </div>
-           )}
-           <div>
-              <label className={labelStyle}>⚠️ Observações Gerais</label>
-              <textarea name="observations" value={formData.observations} onChange={handleChange} className={getFieldStyle('observations') + " min-h-[80px] resize-none"} placeholder="Observações adicionais..." />
-           </div>
-        </div>
-
-        {/* 9. RESPONSÁVEIS */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-5">
-           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-50">
-             <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg text-lg">👥</span>
-             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Responsáveis</h3>
-           </div>
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={labelStyle}>Equipe / Turno</label>
-                <select name="teamShift" value={formData.teamShift} onChange={handleChange} className={getFieldStyle('teamShift')}>
-                  <option value="A">TURNO A</option>
-                  <option value="B">TURNO B</option>
-                  <option value="C">TURNO C</option>
-                  <option value="D">TURNO D</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelStyle}>Centro de Trabalho</label>
-                <select name="workCenter" value={formData.workCenter} onChange={handleChange} className={getFieldStyle('workCenter')}>
-                  <option value="SC108HH">SC108HH</option>
-                  <option value="SC118HH">SC118HH</option>
-                  <option value="SC103HH">SC103HH</option>
-                  <option value="SC105HH">SC105HH</option>
-                  <option value="SC117HH">SC117HH</option>
-                </select>
-              </div>
-           </div>
-           
-           <div>
-              <label className={labelStyle}>👥 Seleção Rápida de Equipe (Turno {formData.teamShift})</label>
-              <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                {currentShiftTechs.map(name => {
-                  const isSelected = formData.technicians.toLowerCase().includes(name.toLowerCase());
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() => toggleTechnician(name)}
-                      className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border-2 ${
-                        isSelected 
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
-                        : 'bg-white border-slate-200 text-slate-500'
-                      }`}
-                    >
-                      {isSelected && <span className="mr-1">✓</span>}
-                      {name}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <label className={labelStyle}>Técnicos <span className="text-red-500">*</span></label>
-              <input name="technicians" value={formData.technicians} onChange={handleChange} className={getFieldStyle('technicians')} placeholder="Nome dos técnicos (separados por vírgula)..." />
-           </div>
-        </div>
-
-        {/* 10. EVIDÊNCIAS */}
-        <div className="bg-white p-4 sm:p-6 rounded-none sm:rounded-3xl border-b sm:border border-slate-200 shadow-xl space-y-4">
-          <div className="flex items-center gap-2">
-             <span className="bg-pink-100 text-pink-600 p-1.5 rounded-lg text-lg">📸</span>
-             <h3 className="text-xs font-black text-slate-700 uppercase tracking-widest">Evidências</h3>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-            {formData.photos.map((photo) => (
-              <div key={photo.id} className="flex flex-col gap-2">
-                  <div className="aspect-square rounded-2xl overflow-hidden relative group border-2 border-slate-200 shadow-sm bg-slate-100">
-                    <img src={photo.url} className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => setFormData(p => ({...p, photos: p.photos.filter(ph => ph.id !== photo.id)}))} className="absolute top-2 right-2 bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                     <button type="button" onClick={() => openEditor(photo.id)} className="absolute bottom-2 right-2 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
+        ) : (
+          /* FORMULÁRIO COMPLETO NA SEQUÊNCIA SOLICITADA */
+          <>
+            {/* BLOCO 1: IDENTIFICAÇÃO BÁSICA */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">🗓️</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Identificação</h3>
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyle}>🗓️ Data</label>
+                    <input type="date" name="date" value={formData.date} onChange={handleChange} className={inputStyle('date')} />
                   </div>
-                  <input type="text" placeholder="Legenda..." value={photo.caption} onChange={(e) => updateCaption(photo.id, e.target.value)} className="w-full text-xs p-2 rounded-lg border border-slate-200 bg-white focus:border-blue-400 outline-none text-center" />
-              </div>
-            ))}
-            {!formData.isTemplate ? (
-              <>
-                <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-500 hover:bg-blue-50 transition-all bg-slate-50">
-                  <span className="text-3xl mb-1">📷</span>
-                  <span className="text-[9px] font-black uppercase tracking-wide">Câmera</span>
-                </button>
-                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
-                <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-2xl border-2 border-dashed border-indigo-300 flex flex-col items-center justify-center text-indigo-500 hover:bg-indigo-50 transition-all bg-slate-50">
-                  <span className="text-3xl mb-1">🖼️</span>
-                  <span className="text-[9px] font-black uppercase tracking-wide">Galeria</span>
-                </button>
-                <input ref={galleryInputRef} type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-              </>
-            ) : (
-              <div className="col-span-full py-6 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-                <span className="text-2xl mb-2 opacity-30">💾</span>
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Salve para adicionar fotos</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* MODAL EDITOR DE FOTO */}
-        {editingPhotoId && (
-            <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in duration-200">
-                <div className="flex justify-between items-center p-4 bg-slate-900 border-b border-slate-800">
-                    <button type="button" onClick={closeEditor} className="text-white px-4 py-2 text-xs font-black uppercase tracking-widest bg-slate-800 rounded-lg">Cancelar</button>
-                    <span className="text-white font-black text-xs uppercase tracking-widest">Rabiscar Evidência</span>
-                    <button type="button" onClick={saveEditedImage} className="text-white px-4 py-2 text-xs font-black uppercase tracking-widest bg-emerald-600 rounded-lg">Concluir</button>
-                </div>
-                <div className="flex-1 overflow-hidden relative touch-none flex items-center justify-center bg-black">
-                    <canvas 
-                        ref={canvasRef} 
-                        onMouseDown={startDrawing} 
-                        onMouseMove={draw} 
-                        onMouseUp={stopDrawing} 
-                        onMouseLeave={stopDrawing} 
-                        onTouchStart={startDrawing} 
-                        onTouchMove={draw} 
-                        onTouchEnd={stopDrawing} 
-                        className="max-w-full max-h-full object-contain cursor-crosshair" 
-                    />
-                </div>
-                <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-center gap-4">
-                   <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full bg-red-600 border border-white"></div>
-                      <span className="text-[10px] font-black text-white uppercase tracking-widest">Pincel Vermelho</span>
-                   </div>
-                </div>
+                  <div>
+                    <label className={labelStyle}>🚜 Equipamento</label>
+                    <input name="equipment" value={formData.equipment} onChange={handleChange} className={inputStyle('equipment') + " uppercase"} placeholder="EX: BM1080KS01" />
+                  </div>
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyle}>📂 N° OM</label>
+                    <input type="tel" inputMode="numeric" name="omNumber" value={formData.omNumber} onChange={handleChange} className={inputStyle('omNumber') + " mono text-lg"} placeholder="000000" />
+                  </div>
+                  <div>
+                    <label className={labelStyle}>🛠️ Tipo de Atividade</label>
+                    <select name="activityType" value={formData.activityType} onChange={handleChange} className={inputStyle('activityType')}>
+                       <option value="preventiva">Preventiva</option>
+                       <option value="corretiva">Corretiva</option>
+                    </select>
+                  </div>
+               </div>
             </div>
-        )}
 
-        {/* TOAST ERRO */}
-        {validationMsg && (
-            <div className="fixed bottom-24 left-4 right-4 z-[60] animate-in slide-in-from-bottom-5 fade-in duration-300">
-                <div className="bg-red-500 text-white p-4 rounded-xl shadow-2xl flex items-start gap-3 border-2 border-red-400">
-                    <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    <div>
-                        <p className="font-bold text-sm uppercase tracking-wider mb-0.5">Atenção</p>
-                        <p className="text-xs font-medium opacity-90 leading-snug">{validationMsg}</p>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* ACTIONS */}
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-           <div className="bg-white border-t border-slate-200 p-4 shadow-[0_-5px_30px_rgba(0,0,0,0.2)] rounded-t-3xl">
-              <div className="w-full max-w-md mx-auto flex gap-3">
-                  {isEdit && !formData.isTemplate ? (
-                    <>
-                      <button type="submit" className="flex-1 bg-blue-600 text-white py-3.5 rounded-xl font-black text-[13px] uppercase tracking-widest hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30"><span>💾</span> Salvar</button>
-                      <button type="button" onClick={() => handleExportAction('PDF')} className="bg-slate-100 text-slate-600 w-14 h-14 rounded-xl font-black text-2xl hover:bg-slate-200 active:scale-95 transition-all flex items-center justify-center border border-slate-200 shrink-0">📄</button>
-                      <button type="button" onClick={() => handleExportAction('WHATSAPP')} className="bg-[#25D366] text-white w-14 h-14 rounded-xl font-black text-xl hover:bg-[#20bd5a] active:scale-95 transition-all flex items-center justify-center shadow-lg shadow-green-600/30 shrink-0"><svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
-                    </>
-                  ) : (
-                    <button type="submit" className="flex-1 bg-emerald-500 text-white py-3.5 rounded-xl font-black text-[13px] uppercase tracking-widest hover:bg-emerald-400 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"><span>🛠️</span> Utilizar Esse Modelo</button>
+            {/* BLOCO 2: TEMPOS E DESVIOS */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-xl border border-amber-500/20">⏰</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Cronograma</h3>
+               </div>
+               <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyle}>⏰ Horário Inicial</label>
+                    <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className={inputStyle('startTime') + " mono text-xl text-center"} />
+                  </div>
+                  <div>
+                    <label className={labelStyle}>⏰ Horário Final</label>
+                    <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className={inputStyle('endTime') + " mono text-xl text-center"} />
+                  </div>
+               </div>
+               <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${formData.iamoDeviation ? 'bg-red-500/5 border-red-500/20' : 'bg-slate-950/50 border-slate-800'}`}>
+                  <div className="flex items-center justify-between">
+                     <span className="text-[11px] font-black text-slate-100 uppercase tracking-widest block">🛑 Desvio IAMO</span>
+                     <input type="checkbox" name="iamoDeviation" checked={formData.iamoDeviation} onChange={handleChange} className="w-6 h-6 rounded-md accent-red-500" />
+                  </div>
+                  {formData.iamoDeviation && (
+                     <textarea name="iamoExplanation" value={formData.iamoExplanation} onChange={handleChange} className="w-full mt-4 bg-slate-950 border border-red-500/30 rounded-lg p-4 outline-none text-base font-bold text-red-400 focus:border-red-500 transition-all shadow-inner" placeholder="Justifique o desvio..." />
                   )}
                </div>
+            </div>
+
+            {/* BLOCO 3: DESCRIÇÃO E EXECUÇÃO */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center text-xl border border-indigo-500/20">♻️</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Detalhamento</h3>
+               </div>
+               <div>
+                  <label className={labelStyle}>♻️ Descrição da OM</label>
+                  <textarea name="omDescription" value={formData.omDescription} onChange={handleChange} className={inputStyle('omDescription') + " h-24 resize-none font-bold text-lg"} placeholder="O que está sendo feito?" />
+               </div>
+               <div>
+                  <label className={labelStyle}>📈 Atividades executada</label>
+                  <textarea name="activityExecuted" value={formData.activityExecuted} onChange={handleChange} className={inputStyle('activityExecuted') + " h-[400px] resize-none font-medium leading-relaxed text-base bg-slate-950/50"} placeholder="Descreva os passos realizados..." />
+               </div>
+            </div>
+
+            {/* BLOCO 4: STATUS E OBSERVAÇÕES */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-xl border border-purple-500/20">🎯</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Conclusão</h3>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.isOmFinished ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-800 bg-slate-950'}`}>
+                    <span className="text-[11px] font-black uppercase text-slate-200">🎯 Finalizada</span>
+                    <input type="checkbox" name="isOmFinished" checked={formData.isOmFinished} onChange={handleChange} className="w-6 h-6 accent-emerald-500" />
+                  </label>
+                  <label className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.hasPendencies ? 'border-amber-500 bg-amber-500/10' : 'border-slate-800 bg-slate-950'}`}>
+                    <span className="text-[11px] font-black uppercase text-slate-200">🔔 Pendências</span>
+                    <input type="checkbox" name="hasPendencies" checked={formData.hasPendencies} onChange={handleChange} className="w-6 h-6 accent-amber-500" />
+                  </label>
+               </div>
+               {formData.hasPendencies && (
+                  <textarea name="pendencyExplanation" value={formData.pendencyExplanation} onChange={handleChange} className={inputStyle('pendencyExplanation') + " h-24"} placeholder="Qual a pendência?" />
+               )}
+               <div>
+                  <label className={labelStyle}>⚠️ Obs</label>
+                  <textarea name="observations" value={formData.observations} onChange={handleChange} className={inputStyle('observations') + " h-24 resize-none"} placeholder="Observações importantes..." />
+               </div>
+            </div>
+
+            {/* BLOCO 5: EQUIPE E RESPONSÁVEIS */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-sky-500/10 rounded-lg flex items-center justify-center text-xl border border-sky-500/20">👥</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Equipe</h3>
+               </div>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <label className={labelStyle}>📈 Equipe turno</label>
+                    <select name="teamShift" value={formData.teamShift} onChange={handleChange} className={inputStyle('teamShift')}>
+                      {(['A','B','C','D'] as Shift[]).map(s => <option key={s} value={s}>Turno {s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelStyle}>🔖 Centro de Trabalho</label>
+                    <select name="workCenter" value={formData.workCenter} onChange={handleChange} className={inputStyle('workCenter')}>
+                      {(['SC108HH','SC118HH','SC103HH','SC105HH','SC117HH'] as WorkCenter[]).map(w => <option key={w} value={w}>{w}</option>)}
+                    </select>
+                  </div>
+               </div>
+               <div className="space-y-4">
+                  <label className={labelStyle}>👥 Técnicos (Seleção Rápida)</label>
+                  <div className="flex flex-wrap gap-2.5 p-4 bg-slate-950 rounded-xl border border-slate-800 no-scrollbar overflow-x-auto">
+                    {SHIFT_TECHNICIANS[formData.teamShift].map(t => (
+                      <button key={t} type="button" onClick={() => toggleTechnician(t)} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all border-2 ${formData.technicians.toLowerCase().includes(t.toLowerCase()) ? 'bg-sky-500 border-sky-500 text-slate-950 shadow-md' : 'bg-slate-800 border-slate-800 text-slate-500'}`}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  <input name="technicians" value={formData.technicians} onChange={handleChange} className={inputStyle('technicians')} placeholder="Técnicos responsáveis..." />
+               </div>
+            </div>
+
+            {/* BLOCO 6: FOTOS */}
+            <div className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+               <div className={sectionHeader}>
+                  <div className="w-10 h-10 bg-pink-500/10 rounded-lg flex items-center justify-center text-xl border border-pink-500/20">📸</div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-300">Evidências Visuais</h3>
+               </div>
+               <div className="grid grid-cols-2 gap-5">
+                  {formData.photos.map(p => (
+                     <div key={p.id} className="group relative aspect-square rounded-xl overflow-hidden border border-slate-700 shadow-lg bg-slate-950">
+                        <img src={p.url} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-4 transition-all duration-200">
+                           <button type="button" onClick={() => openEditor(p.id)} className="w-12 h-12 bg-sky-500 text-slate-950 rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✏️</button>
+                           <button type="button" onClick={() => setFormData(f => ({...f, photos: f.photos.filter(ph => ph.id !== p.id)}))} className="w-12 h-12 bg-red-600 text-white rounded-lg font-black active:scale-90 transition-all text-xl flex items-center justify-center">✕</button>
+                        </div>
+                     </div>
+                  ))}
+                  <button type="button" onClick={() => cameraInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-600 hover:text-sky-500 hover:border-sky-500/40 transition-all bg-slate-950/40">
+                     <span className="text-4xl mb-2">📷</span>
+                     <span className="text-[10px] font-black uppercase tracking-widest">Câmera</span>
+                  </button>
+                  <button type="button" onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-600 hover:text-sky-400 hover:border-sky-400/40 transition-all bg-slate-950/40">
+                     <span className="text-4xl mb-2">🖼️</span>
+                     <span className="text-[10px] font-black uppercase tracking-widest">Galeria</span>
+                  </button>
+               </div>
+               <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
+               <input ref={galleryInputRef} type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+            </div>
+          </>
+        )}
+
+        {/* BARRA DE AÇÕES FIXA */}
+        <div className="fixed bottom-0 left-0 right-0 z-[100] p-6 pb-[env(safe-area-inset-bottom)]">
+           <div className="max-w-md mx-auto glass p-3 rounded-2xl border border-white/10 shadow-2xl">
+              <div className="flex items-center gap-3">
+                 <button type="submit" className="flex-1 h-14 bg-sky-600 text-slate-950 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg">
+                    {formData.isTemplate ? '💾 Salvar Modelo' : '💾 Salvar Relatório'}
+                 </button>
+                 
+                 {!formData.isTemplate && (
+                    <>
+                       <button type="button" onClick={() => handleExportAction('PDF')} className="w-14 h-14 bg-slate-900 text-white rounded-xl flex items-center justify-center border border-slate-700 active:scale-95 transition-all shadow-lg text-xl">📄</button>
+                       <button type="button" onClick={() => handleExportAction('WHATSAPP')} className="w-14 h-14 bg-emerald-600 text-white rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-lg">
+                          <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                       </button>
+                    </>
+                 )}
+              </div>
            </div>
         </div>
+
       </form>
+
+      {/* ANOTAÇÃO EM FOTO */}
+      {editingPhotoId && (
+          <div className="fixed inset-0 z-[200] bg-black flex flex-col animate-in fade-in duration-300">
+              <div className="p-5 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
+                  <button type="button" onClick={() => setEditingPhotoId(null)} className="text-slate-500 font-black text-[11px] uppercase px-4">Sair</button>
+                  <span className="text-[11px] font-black uppercase text-sky-400 tracking-widest">Marcação Técnica</span>
+                  <button type="button" onClick={saveEditedImage} className="text-emerald-500 font-black text-[11px] uppercase px-4">Salvar</button>
+              </div>
+              <div className="flex-1 bg-black relative flex items-center justify-center overflow-hidden touch-none">
+                  <canvas 
+                    ref={canvasRef} 
+                    onMouseDown={(e) => { setIsDrawing(true); const ctx = canvasRef.current?.getContext('2d'); if (!ctx || !canvasRef.current) return; const rect = canvasRef.current.getBoundingClientRect(); ctx.beginPath(); ctx.moveTo((e.clientX - rect.left) * (canvasRef.current.width/rect.width), (e.clientY - rect.top) * (canvasRef.current.height/rect.height)); }} 
+                    onMouseMove={(e) => { if (!isDrawing || !canvasRef.current) return; const ctx = canvasRef.current.getContext('2d'); if (!ctx) return; const rect = canvasRef.current.getBoundingClientRect(); ctx.lineTo((e.clientX - rect.left) * (canvasRef.current.width/rect.width), (e.clientY - rect.top) * (canvasRef.current.height/rect.height)); ctx.stroke(); }} 
+                    onMouseUp={() => setIsDrawing(false)}
+                    onTouchStart={(e) => { e.preventDefault(); setIsDrawing(true); const ctx = canvasRef.current?.getContext('2d'); if (!ctx || !canvasRef.current) return; const rect = canvasRef.current.getBoundingClientRect(); const touch = e.touches[0]; ctx.beginPath(); ctx.moveTo((touch.clientX - rect.left) * (canvasRef.current.width/rect.width), (touch.clientY - rect.top) * (canvasRef.current.height/rect.height)); }}
+                    onTouchMove={(e) => { e.preventDefault(); if (!isDrawing || !canvasRef.current) return; const ctx = canvasRef.current.getContext('2d'); if (!ctx) return; const rect = canvasRef.current.getBoundingClientRect(); const touch = e.touches[0]; ctx.lineTo((touch.clientX - rect.left) * (canvasRef.current.width/rect.width), (touch.clientY - rect.top) * (canvasRef.current.height/rect.height)); ctx.stroke(); }}
+                    onTouchEnd={() => setIsDrawing(false)}
+                    className="max-w-full max-h-full object-contain cursor-crosshair" 
+                  />
+              </div>
+          </div>
+      )}
+
+      {validationMsg && (
+          <div className="fixed bottom-40 left-6 right-6 z-[70] animate-in slide-in-from-bottom-5 duration-400">
+             <div className="bg-red-600 text-white p-5 rounded-xl shadow-2xl flex items-center gap-5 border-2 border-red-500">
+                <span className="text-3xl">⚠️</span>
+                <p className="text-[12px] font-black uppercase tracking-widest leading-relaxed">{validationMsg}</p>
+             </div>
+          </div>
+      )}
     </div>
   );
 };
