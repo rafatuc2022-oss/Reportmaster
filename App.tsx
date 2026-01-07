@@ -60,7 +60,9 @@ const App: React.FC = () => {
       isTemplate: false, 
       date: getTodayStr(),
       category: activeCategory,
-      isExported: false
+      isExported: false,
+      isFilled: false, // Inicia como não preenchido (Amarelo)
+      isOmFinished: false
     };
     storage.addReport(newFilledReport);
     setReports(storage.getReports());
@@ -75,11 +77,19 @@ const App: React.FC = () => {
       setActiveTab('MEUS MODELOS');
     } else if (view === 'EDIT') {
       if (currentReport?.isTemplate) {
-        const newFilledReport = { ...formData, id: crypto.randomUUID(), createdAt: Date.now(), isTemplate: false, category: activeCategory };
+        const newFilledReport = { 
+          ...formData, 
+          id: crypto.randomUUID(), 
+          createdAt: Date.now(), 
+          isTemplate: false, 
+          category: activeCategory,
+          isFilled: true 
+        };
         storage.addReport(newFilledReport);
         setActiveTab('RELATÓRIOS');
       } else {
-        storage.updateReport(formData);
+        const updated = { ...formData, isFilled: true };
+        storage.updateReport(updated);
         setActiveTab('RELATÓRIOS');
       }
     }
@@ -87,8 +97,13 @@ const App: React.FC = () => {
     setView('LIST');
   };
 
+  const handleUpdateReport = (updatedReport: Report) => {
+    storage.updateReport(updatedReport);
+    setReports(storage.getReports());
+  };
+
   const handleMarkAsExported = (report: Report) => {
-    const updatedReport = { ...report, isExported: true };
+    const updatedReport = { ...report, isExported: true, isOmFinished: true, isFilled: true };
     if (!report.isTemplate) {
         storage.updateReport(updatedReport);
         setReports(storage.getReports());
@@ -224,7 +239,6 @@ const App: React.FC = () => {
       <main className={`max-w-xl mx-auto space-y-6 ${view === 'LIST' ? 'p-5' : 'p-0'}`}>
         {view === 'LIST' ? (
           <>
-            {/* BUSCA COM DESIGN ESTRUTURADO */}
             <div className="relative">
                <input 
                  type="text" 
@@ -236,13 +250,11 @@ const App: React.FC = () => {
                <svg className="w-5 h-5 absolute left-4 top-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
 
-            {/* SELETOR DE CATEGORIA */}
             <div className="flex p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                <button onClick={() => setActiveCategory('FIXO')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'FIXO' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-sky-500'}`}>Ativos Fixos</button>
                <button onClick={() => setActiveCategory('MÓVEL')} className={`flex-1 py-3 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${activeCategory === 'MÓVEL' ? 'bg-sky-500 text-slate-950 shadow-md' : 'text-slate-400 dark:text-slate-500 hover:text-sky-500'}`}>Equip. Móveis</button>
             </div>
 
-            {/* TABS DE NAVEGAÇÃO */}
             <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto no-scrollbar">
                {(['MEUS MODELOS', 'RELATÓRIOS', 'BOA JORNADA']).map(tab => (
                  <button 
@@ -280,6 +292,7 @@ const App: React.FC = () => {
                   onPrint={handlePrint} 
                   onMarkExported={handleMarkAsExported}
                   onQuickUse={handleQuickUse} 
+                  onUpdateReport={handleUpdateReport}
                 />
               </div>
             )}
